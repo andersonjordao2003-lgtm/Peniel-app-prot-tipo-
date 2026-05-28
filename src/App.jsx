@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import {
   Bell, CalendarDays, Church, HeartHandshake, Home, LogOut,
   MessageCircle, Send, ShieldAlert, Users, Music, Camera,
-  Baby, UserRound, Heart, ChevronRight, Cross, HandHeart
+  Baby, UserRound, Heart, ChevronRight, Cross, HandHeart,
+  Mail, Phone, UserPlus, KeyRound
 } from "lucide-react";
 
 const departments = [
@@ -22,10 +23,26 @@ const agenda = [
   { day: "Dom", title: "Culto da Família", time: "19:00" }
 ];
 
+const baseMembers = [
+  { name: "Ana Clara", birth: "2008-04-12", age: 16, dept: "Jovens", phone: "(21) 99999-0000", responsible: "Mãe: Patrícia", responsiblePhone: "(21) 98888-0000" },
+  { name: "Lucas Henrique", birth: "2006-09-20", age: 18, dept: "Jovens", phone: "(21) 97777-0000", responsible: "", responsiblePhone: "" },
+  { name: "Mariana Souza", birth: "2009-02-01", age: 15, dept: "Adolescentes", phone: "(21) 96666-0000", responsible: "Pai: Carlos", responsiblePhone: "(21) 95555-0000" }
+];
+
 const alerts = [
   { level: "Atenção", name: "Mariana Souza", text: "Acompanhamento pastoral recomendado." },
   { level: "Urgente", name: "Usuário teste", text: "Alerta crítico demonstrativo." }
 ];
+
+function calculateAge(birth) {
+  if (!birth) return "";
+  const today = new Date();
+  const date = new Date(birth);
+  let age = today.getFullYear() - date.getFullYear();
+  const month = today.getMonth() - date.getMonth();
+  if (month < 0 || (month === 0 && today.getDate() < date.getDate())) age--;
+  return age;
+}
 
 function Header({ role, setRole }) {
   return (
@@ -47,7 +64,7 @@ function Header({ role, setRole }) {
   );
 }
 
-function Login({ setRole }) {
+function Login({ setSelectedRole }) {
   return (
     <main className="login">
       <section className="brandCard">
@@ -57,17 +74,17 @@ function Login({ setRole }) {
       </section>
 
       <section className="loginButtons">
-        <button onClick={() => setRole("member")}>
+        <button onClick={() => setSelectedRole("member")}>
           <span>Membro</span>
           <ChevronRight size={18} />
         </button>
 
-        <button onClick={() => setRole("leader")}>
-          <span>Líder</span>
+        <button onClick={() => setSelectedRole("leader")}>
+          <span>Líder / Coordenador</span>
           <ChevronRight size={18} />
         </button>
 
-        <button onClick={() => setRole("pastor")}>
+        <button onClick={() => setSelectedRole("pastor")}>
           <span>Pastor</span>
           <ChevronRight size={18} />
         </button>
@@ -76,9 +93,199 @@ function Login({ setRole }) {
   );
 }
 
-function HomePage({ role }) {
-  if (role === "leader") return <LeaderPage />;
-  if (role === "pastor") return <PastorPage />;
+function AuthPage({ selectedRole, setSelectedRole, setRole, addMember }) {
+  const [mode, setMode] = useState("login");
+  const [method, setMethod] = useState("app");
+
+  const roleName =
+    selectedRole === "member" ? "Membro" :
+    selectedRole === "leader" ? "Líder / Coordenador" :
+    "Pastor";
+
+  return (
+    <main className="page">
+      <button className="backBtn" onClick={() => setSelectedRole(null)}>
+        Voltar
+      </button>
+
+      <section className="welcome">
+        <p>Acesso</p>
+        <h2>{roleName}</h2>
+      </section>
+
+      <div className="authTabs">
+        <button className={mode === "login" ? "active" : ""} onClick={() => setMode("login")}>
+          <KeyRound size={17} />
+          Login
+        </button>
+
+        <button className={mode === "register" ? "active" : ""} onClick={() => setMode("register")}>
+          <UserPlus size={17} />
+          Cadastro
+        </button>
+      </div>
+
+      <div className="authMethods">
+        <button className={method === "app" ? "active" : ""} onClick={() => setMethod("app")}>
+          Cadastro normal
+        </button>
+        <button className={method === "google" ? "active" : ""} onClick={() => setMethod("google")}>
+          <Mail size={16} />
+          Google
+        </button>
+        <button className={method === "phone" ? "active" : ""} onClick={() => setMethod("phone")}>
+          <Phone size={16} />
+          Telefone
+        </button>
+      </div>
+
+      {mode === "login" ? (
+        <LoginForm selectedRole={selectedRole} setRole={setRole} method={method} />
+      ) : (
+        <RegisterForm
+          selectedRole={selectedRole}
+          setRole={setRole}
+          method={method}
+          addMember={addMember}
+        />
+      )}
+    </main>
+  );
+}
+
+function LoginForm({ selectedRole, setRole, method }) {
+  return (
+    <section className="section">
+      {method === "google" && (
+        <button className="googleBtn" onClick={() => setRole(selectedRole)}>
+          <Mail size={18} />
+          Entrar com Google
+        </button>
+      )}
+
+      {method === "phone" && (
+        <>
+          <label>Número de telefone</label>
+          <input placeholder="(21) 99999-9999" />
+          <button className="primaryBtn" onClick={() => setRole(selectedRole)}>Entrar</button>
+        </>
+      )}
+
+      {method === "app" && (
+        <>
+          <label>Usuário ou telefone</label>
+          <input placeholder="Digite seu usuário ou telefone" />
+
+          <label>Senha</label>
+          <input type="password" placeholder="Digite sua senha" />
+
+          <button className="primaryBtn" onClick={() => setRole(selectedRole)}>Entrar</button>
+        </>
+      )}
+    </section>
+  );
+}
+
+function RegisterForm({ selectedRole, setRole, method, addMember }) {
+  const [form, setForm] = useState({
+    name: "",
+    birth: "",
+    phone: "",
+    dept: "Jovens",
+    responsible: "",
+    responsiblePhone: "",
+    password: ""
+  });
+
+  const age = calculateAge(form.birth);
+  const minor = age !== "" && age < 18;
+
+  function update(field, value) {
+    setForm({ ...form, [field]: value });
+  }
+
+  function submit() {
+    if (selectedRole === "member") {
+      addMember({
+        ...form,
+        age,
+        responsible: minor ? form.responsible : "",
+        responsiblePhone: minor ? form.responsiblePhone : ""
+      });
+    }
+
+    setRole(selectedRole);
+  }
+
+  return (
+    <section className="section">
+      {method === "google" && (
+        <button className="googleBtn">
+          <Mail size={18} />
+          Continuar com Google
+        </button>
+      )}
+
+      {method === "phone" && (
+        <>
+          <label>Número de telefone</label>
+          <input value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="(21) 99999-9999" />
+        </>
+      )}
+
+      <label>Nome completo</label>
+      <input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Digite seu nome" />
+
+      <label>Data de nascimento</label>
+      <input type="date" value={form.birth} onChange={(e) => update("birth", e.target.value)} />
+
+      {selectedRole === "member" && (
+        <>
+          <label>Departamento</label>
+          <select value={form.dept} onChange={(e) => update("dept", e.target.value)}>
+            {departments.map((d) => (
+              <option key={d.name}>{d.name}</option>
+            ))}
+          </select>
+        </>
+      )}
+
+      {selectedRole !== "member" && (
+        <>
+          <label>Função</label>
+          <input placeholder={selectedRole === "leader" ? "Ex: Líder de jovens" : "Ex: Pastor dirigente"} />
+        </>
+      )}
+
+      {method === "app" && (
+        <>
+          <label>Criar senha</label>
+          <input type="password" value={form.password} onChange={(e) => update("password", e.target.value)} placeholder="Digite uma senha" />
+        </>
+      )}
+
+      {minor && selectedRole === "member" && (
+        <div className="responsibleBox">
+          <h3>Responsável legal</h3>
+
+          <label>Nome do responsável</label>
+          <input value={form.responsible} onChange={(e) => update("responsible", e.target.value)} placeholder="Ex: Mãe, pai ou responsável" />
+
+          <label>Telefone do responsável</label>
+          <input value={form.responsiblePhone} onChange={(e) => update("responsiblePhone", e.target.value)} placeholder="(21) 99999-9999" />
+        </div>
+      )}
+
+      <button className="primaryBtn" onClick={submit}>
+        Criar cadastro
+      </button>
+    </section>
+  );
+}
+
+function HomePage({ role, members }) {
+  if (role === "leader") return <LeaderPage members={members} />;
+  if (role === "pastor") return <PastorPage members={members} />;
 
   return (
     <div className="page">
@@ -211,7 +418,9 @@ function ChatPage() {
   );
 }
 
-function LeaderPage() {
+function LeaderPage({ members }) {
+  const visibleMembers = members.filter((m) => m.dept === "Jovens" || m.dept === "Adolescentes");
+
   return (
     <div className="page">
       <section className="welcome">
@@ -219,23 +428,13 @@ function LeaderPage() {
         <h2>Jovens e adolescentes</h2>
       </section>
 
-      <section className="section">
-        <div className="member">
-          <strong>Ana Clara</strong>
-          <span>Jovens · Estável</span>
-        </div>
-        <div className="member warn">
-          <strong>Mariana Souza</strong>
-          <span>Adolescentes · Atenção</span>
-        </div>
-      </section>
-
+      <MembersList members={visibleMembers} limited />
       <Alerts />
     </div>
   );
 }
 
-function PastorPage() {
+function PastorPage({ members }) {
   return (
     <div className="page">
       <section className="welcome">
@@ -244,14 +443,35 @@ function PastorPage() {
       </section>
 
       <div className="stats">
-        <div><strong>128</strong><span>Membros</span></div>
+        <div><strong>{members.length}</strong><span>Membros</span></div>
         <div><strong>7</strong><span>Departamentos</span></div>
         <div><strong>2</strong><span>Alertas</span></div>
       </div>
 
+      <MembersList members={members} />
       <Alerts />
       <Agenda />
     </div>
+  );
+}
+
+function MembersList({ members, limited }) {
+  return (
+    <section className="section">
+      <div className="sectionTitle">
+        <h3>{limited ? "Meus liderados" : "Lista de membros"}</h3>
+      </div>
+
+      {members.map((m, index) => (
+        <div className="member" key={index}>
+          <strong>{m.name || "Novo membro"}</strong>
+          <span>{m.age || "--"} anos · {m.dept}</span>
+          {m.phone && <small>Telefone: {m.phone}</small>}
+          {m.responsible && <small>Responsável: {m.responsible}</small>}
+          {m.responsiblePhone && <small>Contato: {m.responsiblePhone}</small>}
+        </div>
+      ))}
+    </section>
   );
 }
 
@@ -274,7 +494,7 @@ function Alerts() {
   );
 }
 
-function BottomNav({ tab, setTab, role }) {
+function BottomNav({ tab, setTab }) {
   return (
     <nav className="nav">
       <button className={tab === "home" ? "active" : ""} onClick={() => setTab("home")}>
@@ -297,21 +517,48 @@ function BottomNav({ tab, setTab, role }) {
 
 export default function App() {
   const [role, setRole] = useState(null);
+  const [selectedRole, setSelectedRole] = useState(null);
   const [tab, setTab] = useState("home");
+  const [members, setMembers] = useState(baseMembers);
+
+  function addMember(member) {
+    setMembers([...members, member]);
+  }
 
   let content;
 
-  if (!role) content = <Login setRole={(r) => { setRole(r); setTab("home"); }} />;
-  else if (tab === "chat") content = <ChatPage />;
-  else if (tab === "agenda") content = <div className="page"><Agenda /></div>;
-  else content = <HomePage role={role} />;
+  if (!selectedRole && !role) {
+    content = <Login setSelectedRole={setSelectedRole} />;
+  } else if (selectedRole && !role) {
+    content = (
+      <AuthPage
+        selectedRole={selectedRole}
+        setSelectedRole={setSelectedRole}
+        setRole={(r) => {
+          setRole(r);
+          setSelectedRole(null);
+          setTab("home");
+        }}
+        addMember={addMember}
+      />
+    );
+  } else if (tab === "chat") {
+    content = <ChatPage />;
+  } else if (tab === "agenda") {
+    content = <div className="page"><Agenda /></div>;
+  } else {
+    content = <HomePage role={role} members={members} />;
+  }
 
   return (
     <div className="app">
       <div className="phone">
-        <Header role={role} setRole={setRole} />
+        <Header role={role} setRole={(value) => {
+          setRole(value);
+          setSelectedRole(null);
+        }} />
         {content}
-        {role && <BottomNav tab={tab} setTab={setTab} role={role} />}
+        {role && <BottomNav tab={tab} setTab={setTab} />}
       </div>
     </div>
   );
