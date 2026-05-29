@@ -671,3 +671,179 @@ button {
   color: var(--muted);
   font-size: 12px;
 }
+.splash {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255,122,26,.25), transparent 28%),
+    linear-gradient(145deg, #102b57, #07172f);
+  color: white;
+  animation: splashFade .45s ease both;
+}
+
+.splashLogo {
+  width: 92px;
+  height: 92px;
+  border-radius: 32px;
+  display: grid;
+  place-items: center;
+  background: white;
+  color: #ff7a1a;
+  box-shadow: 0 24px 60px rgba(0,0,0,.25);
+  animation: logoPop .8s ease both;
+}
+
+.splash h1 {
+  margin-top: 22px;
+  font-size: 42px;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+.splash p {
+  margin-top: 8px;
+  color: rgba(255,255,255,.72);
+  font-size: 15px;
+}
+
+.page,
+.login,
+.chatPage {
+  animation: pageIn .28s ease both;
+}
+
+.loginButtons button,
+.action,
+.departments button,
+.primaryBtn,
+.nav button,
+.authTabs button,
+.authMethods button,
+.logout,
+.backBtn {
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease, color .16s ease;
+}
+
+.loginButtons button:active,
+.action:active,
+.departments button:active,
+.primaryBtn:active,
+.nav button:active,
+.authTabs button:active,
+.authMethods button:active,
+.logout:active,
+.backBtn:active {
+  transform: scale(.96);
+}
+
+.action,
+.departments button,
+.loginButtons button,
+.section,
+.welcome,
+.nextEvent,
+.brandCard {
+  animation: cardRise .35s ease both;
+}
+
+.action:nth-child(1) { animation-delay: .03s; }
+.action:nth-child(2) { animation-delay: .06s; }
+.action:nth-child(3) { animation-delay: .09s; }
+.action:nth-child(4) { animation-delay: .12s; }
+
+.departments button {
+  position: relative;
+  overflow: hidden;
+}
+
+.departments button::after,
+.action::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent, rgba(255,122,26,.09), transparent);
+  transform: translateX(-100%);
+  transition: transform .45s ease;
+}
+
+.departments button:hover::after,
+.action:hover::after {
+  transform: translateX(100%);
+}
+
+.msg {
+  animation: messageIn .22s ease both;
+}
+
+.composer {
+  position: sticky;
+  bottom: 0;
+}
+
+.nav {
+  animation: navUp .35s ease both;
+}
+
+.nav button.active {
+  box-shadow: 0 10px 24px rgba(16,43,87,.22);
+}
+
+.successFlash::before {
+  content: "Cadastro enviado";
+  position: fixed;
+  z-index: 9999;
+  left: 50%;
+  top: 24px;
+  transform: translateX(-50%);
+  background: #102b57;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 800;
+  box-shadow: 0 18px 45px rgba(16,43,87,.25);
+  animation: toastIn .7s ease both;
+}
+
+@keyframes splashFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes logoPop {
+  0% { opacity: 0; transform: scale(.7) translateY(14px); }
+  70% { transform: scale(1.05) translateY(0); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cardRise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes messageIn {
+  from { opacity: 0; transform: translateY(8px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes navUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(18px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes toastIn {
+  0% { opacity: 0; transform: translateX(-50%) translateY(-18px); }
+  20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-18px); }
+}
