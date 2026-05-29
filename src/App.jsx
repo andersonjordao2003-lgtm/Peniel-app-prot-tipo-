@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Bell, CalendarDays, Church, HeartHandshake, Home, LogOut,
   MessageCircle, Send, ShieldAlert, Users, Music, Camera,
@@ -24,14 +24,46 @@ const agenda = [
 ];
 
 const baseMembers = [
-  { name: "Ana Clara", birth: "2008-04-12", age: 16, dept: "Jovens", phone: "(21) 99999-0000", responsible: "Mãe: Patrícia", responsiblePhone: "(21) 98888-0000" },
-  { name: "Lucas Henrique", birth: "2006-09-20", age: 18, dept: "Jovens", phone: "(21) 97777-0000", responsible: "", responsiblePhone: "" },
-  { name: "Mariana Souza", birth: "2009-02-01", age: 15, dept: "Adolescentes", phone: "(21) 96666-0000", responsible: "Pai: Carlos", responsiblePhone: "(21) 95555-0000" }
+  {
+    name: "Ana Clara",
+    birth: "2008-04-12",
+    age: 16,
+    dept: "Jovens",
+    phone: "(21) 99999-0000",
+    responsible: "Mãe: Patrícia",
+    responsiblePhone: "(21) 98888-0000"
+  },
+  {
+    name: "Lucas Henrique",
+    birth: "2006-09-20",
+    age: 18,
+    dept: "Jovens",
+    phone: "(21) 97777-0000",
+    responsible: "",
+    responsiblePhone: ""
+  },
+  {
+    name: "Mariana Souza",
+    birth: "2009-02-01",
+    age: 15,
+    dept: "Adolescentes",
+    phone: "(21) 96666-0000",
+    responsible: "Pai: Carlos",
+    responsiblePhone: "(21) 95555-0000"
+  }
 ];
 
 const alerts = [
-  { level: "Atenção", name: "Mariana Souza", text: "Acompanhamento pastoral recomendado." },
-  { level: "Urgente", name: "Usuário teste", text: "Alerta crítico demonstrativo." }
+  {
+    level: "Atenção",
+    name: "Mariana Souza",
+    text: "Acompanhamento pastoral recomendado."
+  },
+  {
+    level: "Urgente",
+    name: "Usuário teste",
+    text: "Alerta crítico demonstrativo."
+  }
 ];
 
 function calculateAge(birth) {
@@ -40,7 +72,11 @@ function calculateAge(birth) {
   const date = new Date(birth);
   let age = today.getFullYear() - date.getFullYear();
   const month = today.getMonth() - date.getMonth();
-  if (month < 0 || (month === 0 && today.getDate() < date.getDate())) age--;
+
+  if (month < 0 || (month === 0 && today.getDate() < date.getDate())) {
+    age--;
+  }
+
   return age;
 }
 
@@ -48,7 +84,10 @@ function Header({ role, setRole }) {
   return (
     <header className="header">
       <div className="logoArea">
-        <div className="logoIcon"><Cross size={22} /></div>
+        <div className="logoIcon">
+          <Cross size={22} />
+        </div>
+
         <div>
           <h1>Peniel</h1>
           <p>Onde se vê a face de Deus</p>
@@ -98,9 +137,11 @@ function AuthPage({ selectedRole, setSelectedRole, setRole, addMember }) {
   const [method, setMethod] = useState("app");
 
   const roleName =
-    selectedRole === "member" ? "Membro" :
-    selectedRole === "leader" ? "Líder / Coordenador" :
-    "Pastor";
+    selectedRole === "member"
+      ? "Membro"
+      : selectedRole === "leader"
+      ? "Líder / Coordenador"
+      : "Pastor";
 
   return (
     <main className="page">
@@ -129,10 +170,12 @@ function AuthPage({ selectedRole, setSelectedRole, setRole, addMember }) {
         <button className={method === "app" ? "active" : ""} onClick={() => setMethod("app")}>
           Cadastro normal
         </button>
+
         <button className={method === "google" ? "active" : ""} onClick={() => setMethod("google")}>
           <Mail size={16} />
           Google
         </button>
+
         <button className={method === "phone" ? "active" : ""} onClick={() => setMethod("phone")}>
           <Phone size={16} />
           Telefone
@@ -167,7 +210,10 @@ function LoginForm({ selectedRole, setRole, method }) {
         <>
           <label>Número de telefone</label>
           <input placeholder="(21) 99999-9999" />
-          <button className="primaryBtn" onClick={() => setRole(selectedRole)}>Entrar</button>
+
+          <button className="primaryBtn" onClick={() => setRole(selectedRole)}>
+            Entrar
+          </button>
         </>
       )}
 
@@ -179,7 +225,9 @@ function LoginForm({ selectedRole, setRole, method }) {
           <label>Senha</label>
           <input type="password" placeholder="Digite sua senha" />
 
-          <button className="primaryBtn" onClick={() => setRole(selectedRole)}>Entrar</button>
+          <button className="primaryBtn" onClick={() => setRole(selectedRole)}>
+            Entrar
+          </button>
         </>
       )}
     </section>
@@ -214,6 +262,9 @@ function RegisterForm({ selectedRole, setRole, method, addMember }) {
       });
     }
 
+    document.body.classList.add("successFlash");
+    setTimeout(() => document.body.classList.remove("successFlash"), 700);
+
     setRole(selectedRole);
   }
 
@@ -229,15 +280,27 @@ function RegisterForm({ selectedRole, setRole, method, addMember }) {
       {method === "phone" && (
         <>
           <label>Número de telefone</label>
-          <input value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="(21) 99999-9999" />
+          <input
+            value={form.phone}
+            onChange={(e) => update("phone", e.target.value)}
+            placeholder="(21) 99999-9999"
+          />
         </>
       )}
 
       <label>Nome completo</label>
-      <input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Digite seu nome" />
+      <input
+        value={form.name}
+        onChange={(e) => update("name", e.target.value)}
+        placeholder="Digite seu nome"
+      />
 
       <label>Data de nascimento</label>
-      <input type="date" value={form.birth} onChange={(e) => update("birth", e.target.value)} />
+      <input
+        type="date"
+        value={form.birth}
+        onChange={(e) => update("birth", e.target.value)}
+      />
 
       {selectedRole === "member" && (
         <>
@@ -260,7 +323,12 @@ function RegisterForm({ selectedRole, setRole, method, addMember }) {
       {method === "app" && (
         <>
           <label>Criar senha</label>
-          <input type="password" value={form.password} onChange={(e) => update("password", e.target.value)} placeholder="Digite uma senha" />
+          <input
+            type="password"
+            value={form.password}
+            onChange={(e) => update("password", e.target.value)}
+            placeholder="Digite uma senha"
+          />
         </>
       )}
 
@@ -269,14 +337,22 @@ function RegisterForm({ selectedRole, setRole, method, addMember }) {
           <h3>Responsável legal</h3>
 
           <label>Nome do responsável</label>
-          <input value={form.responsible} onChange={(e) => update("responsible", e.target.value)} placeholder="Ex: Mãe, pai ou responsável" />
+          <input
+            value={form.responsible}
+            onChange={(e) => update("responsible", e.target.value)}
+            placeholder="Ex: Mãe, pai ou responsável"
+          />
 
           <label>Telefone do responsável</label>
-          <input value={form.responsiblePhone} onChange={(e) => update("responsiblePhone", e.target.value)} placeholder="(21) 99999-9999" />
+          <input
+            value={form.responsiblePhone}
+            onChange={(e) => update("responsiblePhone", e.target.value)}
+            placeholder="(21) 99999-9999"
+          />
         </div>
       )}
 
-      <button className="primaryBtn" onClick={submit}>
+      <button className="primaryBtn pulseBtn" onClick={submit}>
         Criar cadastro
       </button>
     </section>
@@ -318,6 +394,7 @@ function HomePage({ role, members }) {
         <div className="departments">
           {departments.map((d) => {
             const Icon = d.icon;
+
             return (
               <button key={d.name}>
                 <Icon size={22} />
@@ -368,12 +445,14 @@ function ChatPage() {
   const [messages, setMessages] = useState([
     { from: "bot", text: "Olá. Como posso ajudar hoje?" }
   ]);
+
   const [text, setText] = useState("");
 
   function send() {
     if (!text.trim()) return;
 
     const lower = text.toLowerCase();
+
     const risk =
       lower.includes("morrer") ||
       lower.includes("suic") ||
@@ -391,6 +470,7 @@ function ChatPage() {
     <div className="chatPage">
       <section className="chatHeader">
         <MessageCircle size={24} />
+
         <div>
           <h2>Assistente Peniel</h2>
           <p>Converse com calma.</p>
@@ -412,14 +492,19 @@ function ChatPage() {
           placeholder="Digite aqui..."
           onKeyDown={(e) => e.key === "Enter" && send()}
         />
-        <button onClick={send}><Send size={18} /></button>
+
+        <button onClick={send}>
+          <Send size={18} />
+        </button>
       </div>
     </div>
   );
 }
 
 function LeaderPage({ members }) {
-  const visibleMembers = members.filter((m) => m.dept === "Jovens" || m.dept === "Adolescentes");
+  const visibleMembers = members.filter(
+    (m) => m.dept === "Jovens" || m.dept === "Adolescentes"
+  );
 
   return (
     <div className="page">
@@ -443,9 +528,20 @@ function PastorPage({ members }) {
       </section>
 
       <div className="stats">
-        <div><strong>{members.length}</strong><span>Membros</span></div>
-        <div><strong>7</strong><span>Departamentos</span></div>
-        <div><strong>2</strong><span>Alertas</span></div>
+        <div>
+          <strong>{members.length}</strong>
+          <span>Membros</span>
+        </div>
+
+        <div>
+          <strong>7</strong>
+          <span>Departamentos</span>
+        </div>
+
+        <div>
+          <strong>2</strong>
+          <span>Alertas</span>
+        </div>
       </div>
 
       <MembersList members={members} />
@@ -466,6 +562,7 @@ function MembersList({ members, limited }) {
         <div className="member" key={index}>
           <strong>{m.name || "Novo membro"}</strong>
           <span>{m.age || "--"} anos · {m.dept}</span>
+
           {m.phone && <small>Telefone: {m.phone}</small>}
           {m.responsible && <small>Responsável: {m.responsible}</small>}
           {m.responsiblePhone && <small>Contato: {m.responsiblePhone}</small>}
@@ -520,9 +617,28 @@ export default function App() {
   const [selectedRole, setSelectedRole] = useState(null);
   const [tab, setTab] = useState("home");
   const [members, setMembers] = useState(baseMembers);
+  const [splash, setSplash] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSplash(false), 1800);
+    return () => clearTimeout(timer);
+  }, []);
 
   function addMember(member) {
     setMembers([...members, member]);
+  }
+
+  if (splash) {
+    return (
+      <div className="splash">
+        <div className="splashLogo">
+          <Cross size={42} />
+        </div>
+
+        <h1>Peniel</h1>
+        <p>Onde se vê a face de Deus</p>
+      </div>
+    );
   }
 
   let content;
@@ -545,7 +661,11 @@ export default function App() {
   } else if (tab === "chat") {
     content = <ChatPage />;
   } else if (tab === "agenda") {
-    content = <div className="page"><Agenda /></div>;
+    content = (
+      <div className="page">
+        <Agenda />
+      </div>
+    );
   } else {
     content = <HomePage role={role} members={members} />;
   }
@@ -553,11 +673,16 @@ export default function App() {
   return (
     <div className="app">
       <div className="phone">
-        <Header role={role} setRole={(value) => {
-          setRole(value);
-          setSelectedRole(null);
-        }} />
+        <Header
+          role={role}
+          setRole={(value) => {
+            setRole(value);
+            setSelectedRole(null);
+          }}
+        />
+
         {content}
+
         {role && <BottomNav tab={tab} setTab={setTab} />}
       </div>
     </div>
