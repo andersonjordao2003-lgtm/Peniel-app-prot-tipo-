@@ -847,3 +847,41 @@ button {
   80% { opacity: 1; transform: translateX(-50%) translateY(0); }
   100% { opacity: 0; transform: translateX(-50%) translateY(-18px); }
 }
+.primaryBtn {
+  width: 100%;
+  height: 56px;
+  margin-top: 18px;
+
+  border: none;
+  border-radius: 18px;
+
+  background: linear-gradient(
+    135deg,
+    #102b57,
+    #173b73
+  );
+
+  color: white;
+
+  font-size: 16px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow:
+    0 12px 24px rgba(16,43,87,.18);
+
+  transition: all .2s ease;
+}
+
+.primaryBtn:hover {
+  transform: translateY(-2px);
+}
+
+.primaryBtn:active {
+  transform: scale(.97);
+}
