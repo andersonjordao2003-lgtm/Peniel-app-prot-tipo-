@@ -6,7 +6,7 @@ import {
   Mail, Phone, UserPlus, KeyRound
 } from "lucide-react";
 
-const LOGO = "/24E7B741-7A3D-49B5-997C-A8D7674864FC.jpeg";
+const LOGO = "/A9D982B8-6AE2-4A96-B0A4-89E3C789B392.png";
 
 const departments = [
   { name: "Jovens", icon: Users },
