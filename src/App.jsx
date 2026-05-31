@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import {
   Bell, CalendarDays, Church, HeartHandshake, Home, LogOut,
   MessageCircle, Send, ShieldAlert, Users, Music, Camera,
-  Baby, UserRound, Heart, ChevronRight, Cross, HandHeart,
+  Baby, UserRound, Heart, ChevronRight, HandHeart,
   Mail, Phone, UserPlus, KeyRound
 } from "lucide-react";
+
+const LOGO = "/24E7B741-7A3D-49B5-997C-A8D7674864FC.jpeg";
 
 const departments = [
   { name: "Jovens", icon: Users },
@@ -85,7 +87,7 @@ function Header({ role, setRole }) {
     <header className="header">
       <div className="logoArea">
         <div className="logoIcon">
-          <Cross size={22} />
+          <img src={LOGO} alt="Peniel" className="logoImage" />
         </div>
 
         <div>
@@ -632,7 +634,7 @@ export default function App() {
     return (
       <div className="splash">
         <div className="splashLogo">
-          <Cross size={42} />
+          <img src={LOGO} alt="Peniel" className="splashLogoImage" />
         </div>
 
         <h1>Peniel</h1>
