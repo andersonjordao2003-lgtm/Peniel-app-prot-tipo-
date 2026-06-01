@@ -1,81 +1,52 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <meta charset="UTF-8" />
 
-<meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
 
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-/>
+  <title>Peniel</title>
 
-<title>Peniel</title>
+  <meta
+    name="description"
+    content="Peniel, onde se vê a face de Deus"
+  />
 
-<meta
-name="description"
-content="Peniel, onde se vê a face de Deus"
-/>
+  <meta name="theme-color" content="#102b57" />
+  <meta name="background-color" content="#ffffff" />
 
-<meta
-name="theme-color"
-content="#102b57"
-/>
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Peniel" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
-<meta
-name="apple-mobile-web-app-capable"
-content="yes"
-/>
+  <link rel="manifest" href="/manifest.json" />
 
-<meta
-name="apple-mobile-web-app-status-bar-style"
-content="default"
-/>
+  <link
+    rel="apple-touch-icon"
+    href="/A9D982B8-6AE2-4A96-B0A4-89E3C789B392.png"
+  />
 
-<meta
-name="apple-mobile-web-app-title"
-content="Peniel"
-/>
-
-<link
-rel="manifest"
-href="/manifest.json"
-/>
-
-<link
-rel="apple-touch-icon"
-href="/A9D982B8-6AE2-4A96-B0A4-89E3C789B392.png"
-/>
-
-<link
-rel="icon"
-href="/A9D982B8-6AE2-4A96-B0A4-89E3C789B392.png"
-/>
-
-<meta
-property="og:title"
-content="Peniel"
-/>
-
-<meta
-property="og:description"
-content="Onde se vê a face de Deus"
-/>
-
-<meta
-property="og:type"
-content="website"
-/>
-
+  <link
+    rel="icon"
+    href="/A9D982B8-6AE2-4A96-B0A4-89E3C789B392.png"
+  />
 </head>
 
 <body>
+  <div id="root"></div>
 
-<div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
 
-<script
-type="module"
-src="/src/main.jsx"
-></script>
-
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("/sw.js");
+      });
+    }
+  </script>
 </body>
 </html>
