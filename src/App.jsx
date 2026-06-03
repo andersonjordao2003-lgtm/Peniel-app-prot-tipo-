@@ -6,6 +6,8 @@ import {
   Mail, Phone, UserPlus, KeyRound
 } from "lucide-react";
 
+import { supabase } from "./supabaseClient";
+
 const LOGO = "/A9D982B8-6AE2-4A96-B0A4-89E3C789B392.png";
 
 const departments = [
@@ -23,36 +25,6 @@ const agenda = [
   { day: "Sex", title: "Reunião de Jovens", time: "19:30" },
   { day: "Dom", title: "EBD", time: "09:00" },
   { day: "Dom", title: "Culto da Família", time: "19:00" }
-];
-
-const baseMembers = [
-  {
-    name: "Ana Clara",
-    birth: "2008-04-12",
-    age: 16,
-    dept: "Jovens",
-    phone: "(21) 99999-0000",
-    responsible: "Mãe: Patrícia",
-    responsiblePhone: "(21) 98888-0000"
-  },
-  {
-    name: "Lucas Henrique",
-    birth: "2006-09-20",
-    age: 18,
-    dept: "Jovens",
-    phone: "(21) 97777-0000",
-    responsible: "",
-    responsiblePhone: ""
-  },
-  {
-    name: "Mariana Souza",
-    birth: "2009-02-01",
-    age: 15,
-    dept: "Adolescentes",
-    phone: "(21) 96666-0000",
-    responsible: "Pai: Carlos",
-    responsiblePhone: "(21) 95555-0000"
-  }
 ];
 
 const alerts = [
@@ -254,9 +226,9 @@ function RegisterForm({ selectedRole, setRole, method, addMember }) {
     setForm({ ...form, [field]: value });
   }
 
-  function submit() {
+  async function submit() {
     if (selectedRole === "member") {
-      addMember({
+      await addMember({
         ...form,
         age,
         responsible: minor ? form.responsible : "",
@@ -504,9 +476,10 @@ function ChatPage() {
 }
 
 function LeaderPage({ members }) {
-  const visibleMembers = members.filter(
-    (m) => m.dept === "Jovens" || m.dept === "Adolescentes"
-  );
+  const visibleMembers = members.filter((m) => {
+    const dept = m.departamento || m.dept;
+    return dept === "Jovens" || dept === "Adolescentes";
+  });
 
   return (
     <div className="page">
@@ -560,14 +533,34 @@ function MembersList({ members, limited }) {
         <h3>{limited ? "Meus liderados" : "Lista de membros"}</h3>
       </div>
 
-      {members.map((m, index) => (
-        <div className="member" key={index}>
-          <strong>{m.name || "Novo membro"}</strong>
-          <span>{m.age || "--"} anos · {m.dept}</span>
+      {members.length === 0 && (
+        <div className="member">
+          <strong>Nenhum membro cadastrado</strong>
+          <span>Cadastre um membro para aparecer aqui.</span>
+        </div>
+      )}
 
-          {m.phone && <small>Telefone: {m.phone}</small>}
-          {m.responsible && <small>Responsável: {m.responsible}</small>}
-          {m.responsiblePhone && <small>Contato: {m.responsiblePhone}</small>}
+      {members.map((m, index) => (
+        <div className="member" key={m.id || index}>
+          <strong>{m.nome || m.name || "Novo membro"}</strong>
+
+          <span>
+            {m.idade || m.age || "--"} anos · {m.departamento || m.dept || "Sem departamento"}
+          </span>
+
+          {(m.telefone || m.phone) && (
+            <small>Telefone: {m.telefone || m.phone}</small>
+          )}
+
+          {(m.responsavel || m.responsible) && (
+            <small>Responsável: {m.responsavel || m.responsible}</small>
+          )}
+
+          {(m.telefone_responsavel || m.responsiblePhone) && (
+            <small>
+              Contato: {m.telefone_responsavel || m.responsiblePhone}
+            </small>
+          )}
         </div>
       ))}
     </section>
@@ -618,16 +611,45 @@ export default function App() {
   const [role, setRole] = useState(null);
   const [selectedRole, setSelectedRole] = useState(null);
   const [tab, setTab] = useState("home");
-  const [members, setMembers] = useState(baseMembers);
+  const [members, setMembers] = useState([]);
   const [splash, setSplash] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => setSplash(false), 1800);
+    loadMembers();
+
     return () => clearTimeout(timer);
   }, []);
 
-  function addMember(member) {
-    setMembers([...members, member]);
+  async function loadMembers() {
+    const { data, error } = await supabase
+      .from("members")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setMembers(data);
+    }
+  }
+
+  async function addMember(member) {
+    const { error } = await supabase
+      .from("members")
+      .insert({
+        nome: member.name,
+        nascimento: member.birth,
+        idade: member.age,
+        telefone: member.phone,
+        departamento: member.dept,
+        responsavel: member.responsible,
+        telefone_responsavel: member.responsiblePhone,
+        cargo: "Membro",
+        ativo: true
+      });
+
+    if (!error) {
+      await loadMembers();
+    }
   }
 
   if (splash) {
