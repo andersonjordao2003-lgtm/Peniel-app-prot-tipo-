@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import {
-  Bell, CalendarDays, Church, HeartHandshake, Home, LogOut,
-  MessageCircle, Send, ShieldAlert, Users, Music, Camera,
-  Baby, UserRound, Heart, ChevronRight, HandHeart,
-  Mail, Phone, UserPlus, KeyRound, WifiOff, Megaphone
+  Bell, CalendarDays, Home, LogOut, MessageCircle, Send,
+  ShieldAlert, Users, Music, Camera, Baby, UserRound, Heart,
+  ChevronRight, HandHeart, Mail, Phone, UserPlus, KeyRound,
+  WifiOff, Megaphone
 } from "lucide-react";
 
 import { supabase } from "./supabaseClient";
@@ -28,16 +28,8 @@ const agenda = [
 ];
 
 const alerts = [
-  {
-    level: "Atenção",
-    name: "Mariana Souza",
-    text: "Acompanhamento pastoral recomendado."
-  },
-  {
-    level: "Urgente",
-    name: "Usuário teste",
-    text: "Alerta crítico demonstrativo."
-  }
+  { level: "Atenção", name: "Mariana Souza", text: "Acompanhamento pastoral recomendado." },
+  { level: "Urgente", name: "Usuário teste", text: "Alerta crítico demonstrativo." }
 ];
 
 function calculateAge(birth) {
@@ -47,14 +39,12 @@ function calculateAge(birth) {
   let age = today.getFullYear() - date.getFullYear();
   const month = today.getMonth() - date.getMonth();
 
-  if (month < 0 || (month === 0 && today.getDate() < date.getDate())) {
-    age--;
-  }
+  if (month < 0 || (month === 0 && today.getDate() < date.getDate())) age--;
 
   return age;
 }
 
-function Header({ role, setRole }) {
+function Header({ role, logout }) {
   return (
     <header className="header">
       <div className="logoArea">
@@ -69,7 +59,7 @@ function Header({ role, setRole }) {
       </div>
 
       {role && (
-        <button className="logout" onClick={() => setRole(null)}>
+        <button className="logout" onClick={logout}>
           <LogOut size={18} />
         </button>
       )}
@@ -117,7 +107,7 @@ function Login({ setSelectedRole }) {
   );
 }
 
-function AuthPage({ selectedRole, setSelectedRole, setRole, addMember }) {
+function AuthPage({ selectedRole, setSelectedRole, login, addMember }) {
   const [mode, setMode] = useState("login");
   const [method, setMethod] = useState("app");
 
@@ -168,11 +158,11 @@ function AuthPage({ selectedRole, setSelectedRole, setRole, addMember }) {
       </div>
 
       {mode === "login" ? (
-        <LoginForm selectedRole={selectedRole} setRole={setRole} method={method} />
+        <LoginForm selectedRole={selectedRole} login={login} method={method} />
       ) : (
         <RegisterForm
           selectedRole={selectedRole}
-          setRole={setRole}
+          login={login}
           method={method}
           addMember={addMember}
         />
@@ -181,11 +171,11 @@ function AuthPage({ selectedRole, setSelectedRole, setRole, addMember }) {
   );
 }
 
-function LoginForm({ selectedRole, setRole, method }) {
+function LoginForm({ selectedRole, login, method }) {
   return (
     <section className="section">
       {method === "google" && (
-        <button className="googleBtn" onClick={() => setRole(selectedRole)}>
+        <button className="googleBtn" onClick={() => login(selectedRole)}>
           <Mail size={18} />
           Entrar com Google
         </button>
@@ -196,7 +186,7 @@ function LoginForm({ selectedRole, setRole, method }) {
           <label>Número de telefone</label>
           <input placeholder="(21) 99999-9999" />
 
-          <button className="primaryBtn" onClick={() => setRole(selectedRole)}>
+          <button className="primaryBtn" onClick={() => login(selectedRole)}>
             Entrar
           </button>
         </>
@@ -210,7 +200,7 @@ function LoginForm({ selectedRole, setRole, method }) {
           <label>Senha</label>
           <input type="password" placeholder="Digite sua senha" />
 
-          <button className="primaryBtn" onClick={() => setRole(selectedRole)}>
+          <button className="primaryBtn" onClick={() => login(selectedRole)}>
             Entrar
           </button>
         </>
@@ -219,7 +209,7 @@ function LoginForm({ selectedRole, setRole, method }) {
   );
 }
 
-function RegisterForm({ selectedRole, setRole, method, addMember }) {
+function RegisterForm({ selectedRole, login, method, addMember }) {
   const [form, setForm] = useState({
     name: "",
     birth: "",
@@ -250,7 +240,7 @@ function RegisterForm({ selectedRole, setRole, method, addMember }) {
     document.body.classList.add("successFlash");
     setTimeout(() => document.body.classList.remove("successFlash"), 700);
 
-    setRole(selectedRole);
+    login(selectedRole);
   }
 
   return (
@@ -364,13 +354,6 @@ function HomePage({ role, members, notices, online }) {
         <CalendarDays size={30} />
       </section>
 
-      <div className="grid">
-        <Action icon={CalendarDays} title="Agenda" />
-        <Action icon={Bell} title="Avisos" />
-        <Action icon={HeartHandshake} title="Oração" />
-        <Action icon={MessageCircle} title="Assistente" />
-      </div>
-
       <section className="section">
         <div className="sectionTitle">
           <h3>Avisos recentes</h3>
@@ -395,35 +378,7 @@ function HomePage({ role, members, notices, online }) {
           </div>
         ))}
       </section>
-
-      <section className="section">
-        <div className="sectionTitle">
-          <h3>Departamentos</h3>
-        </div>
-
-        <div className="departments">
-          {departments.map((d) => {
-            const Icon = d.icon;
-
-            return (
-              <button key={d.name}>
-                <Icon size={22} />
-                <span>{d.name}</span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
     </div>
-  );
-}
-
-function Action({ icon: Icon, title }) {
-  return (
-    <button className="action">
-      <Icon size={24} />
-      <span>{title}</span>
-    </button>
   );
 }
 
@@ -491,9 +446,7 @@ function NoticesPage({ notices, online }) {
         )}
 
         {online && notices.length === 0 && (
-          <div className="emptyState">
-            Nenhum aviso publicado ainda.
-          </div>
+          <div className="emptyState">Nenhum aviso publicado ainda.</div>
         )}
 
         {online && notices.map((notice) => (
@@ -662,9 +615,7 @@ function MembersList({ members, limited }) {
           )}
 
           {(m.telefone_responsavel || m.responsiblePhone) && (
-            <small>
-              Contato: {m.telefone_responsavel || m.responsiblePhone}
-            </small>
+            <small>Contato: {m.telefone_responsavel || m.responsiblePhone}</small>
           )}
         </div>
       ))}
@@ -727,6 +678,14 @@ export default function App() {
   const [online, setOnline] = useState(navigator.onLine);
 
   useEffect(() => {
+    const savedRole = localStorage.getItem("peniel_role");
+
+    if (savedRole) {
+      setRole(savedRole);
+      setSelectedRole(null);
+      setTab("home");
+    }
+
     const timer = setTimeout(() => setSplash(false), 1800);
 
     loadMembers();
@@ -752,6 +711,20 @@ export default function App() {
     };
   }, []);
 
+  function login(selected) {
+    localStorage.setItem("peniel_role", selected);
+    setRole(selected);
+    setSelectedRole(null);
+    setTab("home");
+  }
+
+  function logout() {
+    localStorage.removeItem("peniel_role");
+    setRole(null);
+    setSelectedRole(null);
+    setTab("home");
+  }
+
   async function loadMembers() {
     if (!navigator.onLine) return;
 
@@ -760,9 +733,7 @@ export default function App() {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setMembers(data);
-    }
+    if (!error && data) setMembers(data);
   }
 
   async function loadNotices() {
@@ -773,9 +744,7 @@ export default function App() {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setNotices(data);
-    }
+    if (!error && data) setNotices(data);
   }
 
   async function addMember(member) {
@@ -798,9 +767,7 @@ export default function App() {
         ativo: true
       });
 
-    if (!error) {
-      await loadMembers();
-    }
+    if (!error) await loadMembers();
   }
 
   if (splash) {
@@ -825,11 +792,7 @@ export default function App() {
       <AuthPage
         selectedRole={selectedRole}
         setSelectedRole={setSelectedRole}
-        setRole={(r) => {
-          setRole(r);
-          setSelectedRole(null);
-          setTab("home");
-        }}
+        login={login}
         addMember={addMember}
       />
     );
@@ -846,13 +809,7 @@ export default function App() {
   return (
     <div className="app">
       <div className="phone">
-        <Header
-          role={role}
-          setRole={(value) => {
-            setRole(value);
-            setSelectedRole(null);
-          }}
-        />
+        <Header role={role} logout={logout} />
 
         <OfflineBanner online={online} />
 
