@@ -3,7 +3,7 @@ import {
   Bell, CalendarDays, Home, LogOut, MessageCircle, Send,
   ShieldAlert, Users, Music, Camera, Baby, UserRound, Heart,
   ChevronRight, HandHeart, Mail, Phone, UserPlus, KeyRound,
-  WifiOff, Megaphone
+  WifiOff, Megaphone, PlusCircle
 } from "lucide-react";
 
 import { supabase } from "./supabaseClient";
@@ -38,9 +38,7 @@ function calculateAge(birth) {
   const date = new Date(birth);
   let age = today.getFullYear() - date.getFullYear();
   const month = today.getMonth() - date.getMonth();
-
   if (month < 0 || (month === 0 && today.getDate() < date.getDate())) age--;
-
   return age;
 }
 
@@ -51,7 +49,6 @@ function Header({ role, logout }) {
         <div className="logoIcon">
           <img src={LOGO} alt="Peniel" className="logoImage" />
         </div>
-
         <div>
           <h1>Peniel</h1>
           <p>Onde se vê a face de Deus</p>
@@ -109,7 +106,7 @@ function Login({ setSelectedRole }) {
 
 function AuthPage({ selectedRole, setSelectedRole, login, addMember }) {
   const [mode, setMode] = useState("login");
-  const [method, setMethod] = useState("app");
+  const [method, setMethod] = useState("google");
 
   const roleName =
     selectedRole === "member"
@@ -141,11 +138,7 @@ function AuthPage({ selectedRole, setSelectedRole, login, addMember }) {
         </button>
       </div>
 
-      <div className="authMethods">
-        <button className={method === "app" ? "active" : ""} onClick={() => setMethod("app")}>
-          Cadastro normal
-        </button>
-
+      <div className="authMethods twoMethods">
         <button className={method === "google" ? "active" : ""} onClick={() => setMethod("google")}>
           <Mail size={16} />
           Google
@@ -191,20 +184,6 @@ function LoginForm({ selectedRole, login, method }) {
           </button>
         </>
       )}
-
-      {method === "app" && (
-        <>
-          <label>Usuário ou telefone</label>
-          <input placeholder="Digite seu usuário ou telefone" />
-
-          <label>Senha</label>
-          <input type="password" placeholder="Digite sua senha" />
-
-          <button className="primaryBtn" onClick={() => login(selectedRole)}>
-            Entrar
-          </button>
-        </>
-      )}
     </section>
   );
 }
@@ -239,7 +218,6 @@ function RegisterForm({ selectedRole, login, method, addMember }) {
 
     document.body.classList.add("successFlash");
     setTimeout(() => document.body.classList.remove("successFlash"), 700);
-
     login(selectedRole);
   }
 
@@ -295,7 +273,7 @@ function RegisterForm({ selectedRole, login, method, addMember }) {
         </>
       )}
 
-      {method === "app" && (
+      {method === "phone" && (
         <>
           <label>Criar senha</label>
           <input
@@ -503,7 +481,6 @@ function ChatPage({ online }) {
     <div className="chatPage">
       <section className="chatHeader">
         <MessageCircle size={24} />
-
         <div>
           <h2>Assistente Peniel</h2>
           <p>{online ? "Converse com calma." : "Sem conexão no momento."}</p>
@@ -578,9 +555,112 @@ function PastorPage({ members, notices }) {
         </div>
       </div>
 
+      <NoticeComposer />
+
       <MembersList members={members} />
+
       <Alerts />
     </div>
+  );
+}
+
+function NoticeComposer() {
+  const [open, setOpen] = useState(false);
+  const [notice, setNotice] = useState({
+    title: "",
+    message: "",
+    target: "Todos"
+  });
+  const [saving, setSaving] = useState(false);
+
+  function update(field, value) {
+    setNotice({ ...notice, [field]: value });
+  }
+
+  async function publishNotice() {
+    if (!notice.title.trim() || !notice.message.trim()) {
+      alert("Preencha o título e a mensagem do aviso.");
+      return;
+    }
+
+    if (!navigator.onLine) {
+      alert("Não foi possível publicar. Verifique sua conexão.");
+      return;
+    }
+
+    setSaving(true);
+
+    const { error } = await supabase.from("notices").insert({
+      title: notice.title,
+      message: notice.message,
+      target: notice.target,
+      author: "Pastoral Peniel"
+    });
+
+    setSaving(false);
+
+    if (error) {
+      alert("Não foi possível publicar o aviso.");
+      return;
+    }
+
+    setNotice({ title: "", message: "", target: "Todos" });
+    setOpen(false);
+    document.body.classList.add("successFlash");
+    setTimeout(() => document.body.classList.remove("successFlash"), 700);
+  }
+
+  return (
+    <section className="section">
+      <div className="sectionTitle">
+        <h3>Mural de avisos</h3>
+        <Megaphone size={20} />
+      </div>
+
+      {!open && (
+        <button className="primaryBtn" onClick={() => setOpen(true)}>
+          <PlusCircle size={18} />
+          Novo aviso
+        </button>
+      )}
+
+      {open && (
+        <div className="noticeForm">
+          <label>Título do aviso</label>
+          <input
+            value={notice.title}
+            onChange={(e) => update("title", e.target.value)}
+            placeholder="Ex: Ensaio do louvor"
+          />
+
+          <label>Mensagem</label>
+          <textarea
+            value={notice.message}
+            onChange={(e) => update("message", e.target.value)}
+            placeholder="Digite o comunicado..."
+          />
+
+          <label>Destinatários</label>
+          <select
+            value={notice.target}
+            onChange={(e) => update("target", e.target.value)}
+          >
+            <option>Todos</option>
+            {departments.map((d) => (
+              <option key={d.name}>{d.name}</option>
+            ))}
+          </select>
+
+          <button className="primaryBtn" onClick={publishNotice}>
+            {saving ? "Publicando..." : "Publicar aviso"}
+          </button>
+
+          <button className="secondaryBtn" onClick={() => setOpen(false)}>
+            Cancelar
+          </button>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -691,6 +771,15 @@ export default function App() {
     loadMembers();
     loadNotices();
 
+    const noticeChannel = supabase
+      .channel("notices-feed")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notices" },
+        () => loadNotices()
+      )
+      .subscribe();
+
     function goOnline() {
       setOnline(true);
       loadMembers();
@@ -706,6 +795,7 @@ export default function App() {
 
     return () => {
       clearTimeout(timer);
+      supabase.removeChannel(noticeChannel);
       window.removeEventListener("online", goOnline);
       window.removeEventListener("offline", goOffline);
     };
