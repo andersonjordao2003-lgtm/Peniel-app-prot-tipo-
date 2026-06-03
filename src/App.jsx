@@ -3,7 +3,8 @@ import {
   Bell, CalendarDays, Home, LogOut, MessageCircle, Send,
   ShieldAlert, Users, Music, Camera, Baby, UserRound, Heart,
   ChevronRight, HandHeart, Mail, Phone, UserPlus, KeyRound,
-  WifiOff, Megaphone, PlusCircle
+  WifiOff, Megaphone, PlusCircle, Copy, QrCode, Upload,
+  CircleDollarSign, User
 } from "lucide-react";
 
 import { supabase } from "./supabaseClient";
@@ -216,6 +217,10 @@ function RegisterForm({ selectedRole, login, method, addMember }) {
       });
     }
 
+    localStorage.setItem("peniel_profile_name", form.name || "Membro Peniel");
+    localStorage.setItem("peniel_profile_dept", form.dept || "Não informado");
+    localStorage.setItem("peniel_profile_phone", form.phone || "Não informado");
+
     document.body.classList.add("successFlash");
     setTimeout(() => document.body.classList.remove("successFlash"), 700);
     login(selectedRole);
@@ -355,6 +360,176 @@ function HomePage({ role, members, notices, online }) {
             <small>{notice.target || "Todos"} · {notice.author || "Peniel"}</small>
           </div>
         ))}
+      </section>
+    </div>
+  );
+}
+
+function ContributionPage({ contribution, online }) {
+  const pixKey = contribution?.pix_key || "pix-da-igreja@exemplo.com";
+  const pixType = contribution?.pix_type || "E-mail";
+  const churchName = contribution?.church_name || "Congregação Peniel";
+  const bankName = contribution?.bank_name || "Banco da Igreja";
+  const description =
+    contribution?.description || "Área destinada a dízimos, ofertas, missões e campanhas.";
+
+  async function copyPix() {
+    try {
+      await navigator.clipboard.writeText(pixKey);
+      alert("Chave Pix copiada.");
+    } catch {
+      alert("Não foi possível copiar automaticamente. Copie manualmente a chave exibida.");
+    }
+  }
+
+  function uploadProof() {
+    alert("Na versão oficial, esta área permitirá enviar o comprovante para a tesouraria.");
+  }
+
+  return (
+    <div className="page">
+      <section className="welcome contributionHero">
+        <p>Contribuição</p>
+        <h2>Dízimos e Ofertas</h2>
+      </section>
+
+      {!online && (
+        <section className="section">
+          <div className="emptyState">
+            Sem conexão. As informações exibidas podem estar desatualizadas.
+          </div>
+        </section>
+      )}
+
+      <section className="section pixBox">
+        <div className="sectionTitle">
+          <h3>Pix da igreja</h3>
+          <CircleDollarSign size={21} />
+        </div>
+
+        <div className="pixInfo">
+          <span>Igreja</span>
+          <strong>{churchName}</strong>
+        </div>
+
+        <div className="pixInfo">
+          <span>Tipo da chave</span>
+          <strong>{pixType}</strong>
+        </div>
+
+        <div className="pixInfo">
+          <span>Chave Pix</span>
+          <strong>{pixKey}</strong>
+        </div>
+
+        <div className="pixInfo">
+          <span>Banco</span>
+          <strong>{bankName}</strong>
+        </div>
+
+        <p className="pixDescription">{description}</p>
+
+        <button className="primaryBtn" onClick={copyPix}>
+          <Copy size={18} />
+          Copiar chave Pix
+        </button>
+      </section>
+
+      <section className="section qrSection">
+        <div className="sectionTitle">
+          <h3>QR Code Pix</h3>
+          <QrCode size={21} />
+        </div>
+
+        <div className="fakeQr">
+          <QrCode size={82} />
+        </div>
+
+        <p className="qrText">
+          Na versão oficial, este espaço exibirá o QR Code Pix cadastrado pela tesouraria da igreja.
+        </p>
+      </section>
+
+      <section className="section">
+        <div className="sectionTitle">
+          <h3>Finalidade</h3>
+        </div>
+
+        <div className="campaignList">
+          <button>Dízimo</button>
+          <button>Oferta</button>
+          <button>Missões</button>
+          <button>Campanhas</button>
+        </div>
+
+        <button className="secondaryBtn" onClick={uploadProof}>
+          <Upload size={18} />
+          Enviar comprovante
+        </button>
+      </section>
+
+      <section className="section">
+        <div className="emptyState">
+          Confirme os dados da igreja antes de concluir a transferência no aplicativo do seu banco.
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function ProfilePage({ role, logout }) {
+  const name = localStorage.getItem("peniel_profile_name") || "Usuário Peniel";
+  const dept = localStorage.getItem("peniel_profile_dept") || "Não informado";
+  const phone = localStorage.getItem("peniel_profile_phone") || "Não informado";
+
+  const roleName =
+    role === "pastor"
+      ? "Pastor"
+      : role === "leader"
+      ? "Líder / Coordenador"
+      : "Membro";
+
+  return (
+    <div className="page">
+      <section className="welcome">
+        <p>Perfil</p>
+        <h2>Minha conta</h2>
+      </section>
+
+      <section className="section profileCard">
+        <div className="profileAvatar">
+          <User size={34} />
+        </div>
+
+        <h3>{name}</h3>
+        <p>{roleName}</p>
+      </section>
+
+      <section className="section">
+        <div className="profileInfo">
+          <span>Departamento</span>
+          <strong>{dept}</strong>
+        </div>
+
+        <div className="profileInfo">
+          <span>Telefone</span>
+          <strong>{phone}</strong>
+        </div>
+
+        <div className="profileInfo">
+          <span>Congregação</span>
+          <strong>Peniel</strong>
+        </div>
+      </section>
+
+      <section className="section">
+        <button className="secondaryBtn" onClick={() => alert("Edição de perfil será liberada na versão oficial.")}>
+          Editar perfil
+        </button>
+
+        <button className="primaryBtn" onClick={logout}>
+          Sair da conta
+        </button>
       </section>
     </div>
   );
@@ -724,25 +899,30 @@ function Alerts() {
 
 function BottomNav({ tab, setTab }) {
   return (
-    <nav className="nav nav4">
+    <nav className="nav nav5">
       <button className={tab === "home" ? "active" : ""} onClick={() => setTab("home")}>
-        <Home size={19} />
+        <Home size={18} />
         <span>Início</span>
       </button>
 
-      <button className={tab === "agenda" ? "active" : ""} onClick={() => setTab("agenda")}>
-        <CalendarDays size={19} />
-        <span>Agenda</span>
-      </button>
-
       <button className={tab === "notices" ? "active" : ""} onClick={() => setTab("notices")}>
-        <Bell size={19} />
+        <Bell size={18} />
         <span>Avisos</span>
       </button>
 
+      <button className={tab === "contribution" ? "active" : ""} onClick={() => setTab("contribution")}>
+        <CircleDollarSign size={18} />
+        <span>Contribuir</span>
+      </button>
+
       <button className={tab === "chat" ? "active" : ""} onClick={() => setTab("chat")}>
-        <MessageCircle size={19} />
+        <MessageCircle size={18} />
         <span>Assistente</span>
+      </button>
+
+      <button className={tab === "profile" ? "active" : ""} onClick={() => setTab("profile")}>
+        <User size={18} />
+        <span>Perfil</span>
       </button>
     </nav>
   );
@@ -754,6 +934,7 @@ export default function App() {
   const [tab, setTab] = useState("home");
   const [members, setMembers] = useState([]);
   const [notices, setNotices] = useState([]);
+  const [contribution, setContribution] = useState(null);
   const [splash, setSplash] = useState(true);
   const [online, setOnline] = useState(navigator.onLine);
 
@@ -770,6 +951,7 @@ export default function App() {
 
     loadMembers();
     loadNotices();
+    loadContribution();
 
     const noticeChannel = supabase
       .channel("notices-feed")
@@ -784,6 +966,7 @@ export default function App() {
       setOnline(true);
       loadMembers();
       loadNotices();
+      loadContribution();
     }
 
     function goOffline() {
@@ -837,6 +1020,21 @@ export default function App() {
     if (!error && data) setNotices(data);
   }
 
+  async function loadContribution() {
+    if (!navigator.onLine) return;
+
+    const { data, error } = await supabase
+      .from("contribution_settings")
+      .select("*")
+      .eq("active", true)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (!error && data && data.length > 0) {
+      setContribution(data[0]);
+    }
+  }
+
   async function addMember(member) {
     if (!navigator.onLine) {
       alert("Não foi possível conectar no momento. Verifique sua rede e tente novamente.");
@@ -888,10 +1086,12 @@ export default function App() {
     );
   } else if (tab === "chat") {
     content = <ChatPage online={online} />;
-  } else if (tab === "agenda") {
-    content = <AgendaPage online={online} />;
   } else if (tab === "notices") {
     content = <NoticesPage notices={notices} online={online} />;
+  } else if (tab === "contribution") {
+    content = <ContributionPage contribution={contribution} online={online} />;
+  } else if (tab === "profile") {
+    content = <ProfilePage role={role} logout={logout} />;
   } else {
     content = <HomePage role={role} members={members} notices={notices} online={online} />;
   }
@@ -900,11 +1100,8 @@ export default function App() {
     <div className="app">
       <div className="phone">
         <Header role={role} logout={logout} />
-
         <OfflineBanner online={online} />
-
         {content}
-
         {role && <BottomNav tab={tab} setTab={setTab} />}
       </div>
     </div>
