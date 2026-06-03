@@ -3,7 +3,7 @@ import {
   Bell, CalendarDays, Church, HeartHandshake, Home, LogOut,
   MessageCircle, Send, ShieldAlert, Users, Music, Camera,
   Baby, UserRound, Heart, ChevronRight, HandHeart,
-  Mail, Phone, UserPlus, KeyRound
+  Mail, Phone, UserPlus, KeyRound, WifiOff, Megaphone
 } from "lucide-react";
 
 import { supabase } from "./supabaseClient";
@@ -74,6 +74,17 @@ function Header({ role, setRole }) {
         </button>
       )}
     </header>
+  );
+}
+
+function OfflineBanner({ online }) {
+  if (online) return null;
+
+  return (
+    <div className="offlineBanner">
+      <WifiOff size={18} />
+      <span>Sem conexão. Algumas informações podem não carregar.</span>
+    </div>
   );
 }
 
@@ -333,9 +344,9 @@ function RegisterForm({ selectedRole, setRole, method, addMember }) {
   );
 }
 
-function HomePage({ role, members }) {
+function HomePage({ role, members, notices, online }) {
   if (role === "leader") return <LeaderPage members={members} />;
-  if (role === "pastor") return <PastorPage members={members} />;
+  if (role === "pastor") return <PastorPage members={members} notices={notices} />;
 
   return (
     <div className="page">
@@ -362,6 +373,31 @@ function HomePage({ role, members }) {
 
       <section className="section">
         <div className="sectionTitle">
+          <h3>Avisos recentes</h3>
+          <Megaphone size={20} />
+        </div>
+
+        {!online && (
+          <div className="emptyState">
+            Não foi possível carregar os avisos. Verifique sua conexão.
+          </div>
+        )}
+
+        {online && notices.length === 0 && (
+          <div className="emptyState">Nenhum aviso publicado no momento.</div>
+        )}
+
+        {online && notices.slice(0, 2).map((notice) => (
+          <div className="noticeCard" key={notice.id}>
+            <strong>{notice.title}</strong>
+            <p>{notice.message}</p>
+            <small>{notice.target || "Todos"} · {notice.author || "Peniel"}</small>
+          </div>
+        ))}
+      </section>
+
+      <section className="section">
+        <div className="sectionTitle">
           <h3>Departamentos</h3>
         </div>
 
@@ -378,8 +414,6 @@ function HomePage({ role, members }) {
           })}
         </div>
       </section>
-
-      <Agenda />
     </div>
   );
 }
@@ -393,11 +427,32 @@ function Action({ icon: Icon, title }) {
   );
 }
 
+function AgendaPage({ online }) {
+  return (
+    <div className="page">
+      <section className="welcome">
+        <p>Agenda</p>
+        <h2>Programação da semana</h2>
+      </section>
+
+      {!online && (
+        <section className="section">
+          <div className="emptyState">
+            Não foi possível atualizar a agenda. Mostrando informações salvas.
+          </div>
+        </section>
+      )}
+
+      <Agenda />
+    </div>
+  );
+}
+
 function Agenda() {
   return (
     <section className="section">
       <div className="sectionTitle">
-        <h3>Agenda da semana</h3>
+        <h3>Eventos</h3>
       </div>
 
       <div className="agenda">
@@ -415,7 +470,45 @@ function Agenda() {
   );
 }
 
-function ChatPage() {
+function NoticesPage({ notices, online }) {
+  return (
+    <div className="page">
+      <section className="welcome">
+        <p>Mural</p>
+        <h2>Avisos da igreja</h2>
+      </section>
+
+      <section className="section">
+        <div className="sectionTitle">
+          <h3>Comunicados</h3>
+          <Bell size={20} />
+        </div>
+
+        {!online && (
+          <div className="emptyState">
+            Não foi possível conectar no momento. Verifique sua rede e tente novamente.
+          </div>
+        )}
+
+        {online && notices.length === 0 && (
+          <div className="emptyState">
+            Nenhum aviso publicado ainda.
+          </div>
+        )}
+
+        {online && notices.map((notice) => (
+          <div className="noticeCard" key={notice.id}>
+            <strong>{notice.title}</strong>
+            <p>{notice.message}</p>
+            <small>{notice.target || "Todos"} · {notice.author || "Peniel"}</small>
+          </div>
+        ))}
+      </section>
+    </div>
+  );
+}
+
+function ChatPage({ online }) {
   const [messages, setMessages] = useState([
     { from: "bot", text: "Olá. Como posso ajudar hoje?" }
   ]);
@@ -424,6 +517,19 @@ function ChatPage() {
 
   function send() {
     if (!text.trim()) return;
+
+    if (!online) {
+      setMessages([
+        ...messages,
+        { from: "user", text },
+        {
+          from: "bot",
+          text: "Não foi possível se conectar no momento. Verifique sua rede e tente novamente."
+        }
+      ]);
+      setText("");
+      return;
+    }
 
     const lower = text.toLowerCase();
 
@@ -447,7 +553,7 @@ function ChatPage() {
 
         <div>
           <h2>Assistente Peniel</h2>
-          <p>Converse com calma.</p>
+          <p>{online ? "Converse com calma." : "Sem conexão no momento."}</p>
         </div>
       </section>
 
@@ -494,7 +600,7 @@ function LeaderPage({ members }) {
   );
 }
 
-function PastorPage({ members }) {
+function PastorPage({ members, notices }) {
   return (
     <div className="page">
       <section className="welcome">
@@ -514,14 +620,13 @@ function PastorPage({ members }) {
         </div>
 
         <div>
-          <strong>2</strong>
-          <span>Alertas</span>
+          <strong>{notices.length}</strong>
+          <span>Avisos</span>
         </div>
       </div>
 
       <MembersList members={members} />
       <Alerts />
-      <Agenda />
     </div>
   );
 }
@@ -588,20 +693,25 @@ function Alerts() {
 
 function BottomNav({ tab, setTab }) {
   return (
-    <nav className="nav">
+    <nav className="nav nav4">
       <button className={tab === "home" ? "active" : ""} onClick={() => setTab("home")}>
         <Home size={19} />
         <span>Início</span>
       </button>
 
+      <button className={tab === "agenda" ? "active" : ""} onClick={() => setTab("agenda")}>
+        <CalendarDays size={19} />
+        <span>Agenda</span>
+      </button>
+
+      <button className={tab === "notices" ? "active" : ""} onClick={() => setTab("notices")}>
+        <Bell size={19} />
+        <span>Avisos</span>
+      </button>
+
       <button className={tab === "chat" ? "active" : ""} onClick={() => setTab("chat")}>
         <MessageCircle size={19} />
         <span>Assistente</span>
-      </button>
-
-      <button className={tab === "agenda" ? "active" : ""} onClick={() => setTab("agenda")}>
-        <Church size={19} />
-        <span>Peniel</span>
       </button>
     </nav>
   );
@@ -612,16 +722,39 @@ export default function App() {
   const [selectedRole, setSelectedRole] = useState(null);
   const [tab, setTab] = useState("home");
   const [members, setMembers] = useState([]);
+  const [notices, setNotices] = useState([]);
   const [splash, setSplash] = useState(true);
+  const [online, setOnline] = useState(navigator.onLine);
 
   useEffect(() => {
     const timer = setTimeout(() => setSplash(false), 1800);
-    loadMembers();
 
-    return () => clearTimeout(timer);
+    loadMembers();
+    loadNotices();
+
+    function goOnline() {
+      setOnline(true);
+      loadMembers();
+      loadNotices();
+    }
+
+    function goOffline() {
+      setOnline(false);
+    }
+
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
   }, []);
 
   async function loadMembers() {
+    if (!navigator.onLine) return;
+
     const { data, error } = await supabase
       .from("members")
       .select("*")
@@ -632,7 +765,25 @@ export default function App() {
     }
   }
 
+  async function loadNotices() {
+    if (!navigator.onLine) return;
+
+    const { data, error } = await supabase
+      .from("notices")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setNotices(data);
+    }
+  }
+
   async function addMember(member) {
+    if (!navigator.onLine) {
+      alert("Não foi possível conectar no momento. Verifique sua rede e tente novamente.");
+      return;
+    }
+
     const { error } = await supabase
       .from("members")
       .insert({
@@ -683,15 +834,13 @@ export default function App() {
       />
     );
   } else if (tab === "chat") {
-    content = <ChatPage />;
+    content = <ChatPage online={online} />;
   } else if (tab === "agenda") {
-    content = (
-      <div className="page">
-        <Agenda />
-      </div>
-    );
+    content = <AgendaPage online={online} />;
+  } else if (tab === "notices") {
+    content = <NoticesPage notices={notices} online={online} />;
   } else {
-    content = <HomePage role={role} members={members} />;
+    content = <HomePage role={role} members={members} notices={notices} online={online} />;
   }
 
   return (
@@ -704,6 +853,8 @@ export default function App() {
             setSelectedRole(null);
           }}
         />
+
+        <OfflineBanner online={online} />
 
         {content}
 
