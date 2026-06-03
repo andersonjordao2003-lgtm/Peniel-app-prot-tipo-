@@ -878,3 +878,58 @@ button {
     width: calc(100% - 28px);
   }
 }
+.nav4 {
+  grid-template-columns: repeat(4, 1fr) !important;
+}
+
+.offlineBanner {
+  margin: 12px 18px 0;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: #fff7ed;
+  color: #9a3412;
+  border: 1px solid rgba(255, 122, 26, .25);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.noticeCard {
+  padding: 15px;
+  border-radius: 18px;
+  background: #f3f6fb;
+  margin-bottom: 10px;
+  border-left: 4px solid var(--orange);
+}
+
+.noticeCard strong {
+  color: var(--blue);
+  display: block;
+  font-size: 15px;
+}
+
+.noticeCard p {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 6px;
+  line-height: 1.45;
+}
+
+.noticeCard small {
+  display: block;
+  margin-top: 8px;
+  color: var(--orange);
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.emptyState {
+  padding: 14px;
+  border-radius: 18px;
+  background: #f3f6fb;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
