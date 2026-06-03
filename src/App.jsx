@@ -4,7 +4,8 @@ import {
   ShieldAlert, Users, Music, Camera, Baby, UserRound, Heart,
   ChevronRight, HandHeart, Mail, Phone, UserPlus, KeyRound,
   WifiOff, Megaphone, PlusCircle, Copy, QrCode, Upload,
-  CircleDollarSign, User, HeartHandshake, CheckCircle2
+  CircleDollarSign, User, HeartHandshake, CheckCircle2,
+  Menu, X
 } from "lucide-react";
 
 import { supabase } from "./supabaseClient";
@@ -48,10 +49,16 @@ function getProfile() {
   };
 }
 
-function Header({ role, logout }) {
+function Header({ role, logout, openMenu }) {
   return (
     <header className="header">
       <div className="logoArea">
+        {role && (
+          <button className="menuButton" onClick={openMenu}>
+            <Menu size={23} />
+          </button>
+        )}
+
         <div className="logoIcon">
           <img src={LOGO} alt="Peniel" className="logoImage" />
         </div>
@@ -68,6 +75,77 @@ function Header({ role, logout }) {
         </button>
       )}
     </header>
+  );
+}
+
+function SideMenu({ open, closeMenu, tab, setTab, role, logout }) {
+  if (!open) return null;
+
+  const items = [
+    { id: "home", label: "Início", icon: Home },
+    { id: "agenda", label: "Agenda", icon: CalendarDays },
+    { id: "notices", label: "Avisos", icon: Bell },
+    { id: "contribution", label: "Dízimos / Pix", icon: CircleDollarSign },
+    { id: "prayer", label: "Pedidos de oração", icon: HeartHandshake },
+    { id: "chat", label: "Assistente IA", icon: MessageCircle },
+    { id: "profile", label: "Meu perfil", icon: User }
+  ];
+
+  const roleName =
+    role === "pastor"
+      ? "Pastor"
+      : role === "leader"
+      ? "Líder / Coordenador"
+      : "Membro";
+
+  function goTo(id) {
+    setTab(id);
+    closeMenu();
+  }
+
+  return (
+    <div className="drawerOverlay" onClick={closeMenu}>
+      <aside className="drawer" onClick={(e) => e.stopPropagation()}>
+        <div className="drawerHeader">
+          <div className="drawerLogo">
+            <img src={LOGO} alt="Peniel" />
+          </div>
+
+          <div>
+            <h2>Peniel</h2>
+            <p>{roleName}</p>
+          </div>
+
+          <button className="drawerClose" onClick={closeMenu}>
+            <X size={21} />
+          </button>
+        </div>
+
+        <div className="drawerMenu">
+          {items.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <button
+                key={item.id}
+                className={tab === item.id ? "active" : ""}
+                onClick={() => goTo(item.id)}
+              >
+                <Icon size={21} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="drawerFooter">
+          <button onClick={logout}>
+            <LogOut size={19} />
+            <span>Sair da conta</span>
+          </button>
+        </div>
+      </aside>
+    </div>
   );
 }
 
@@ -716,10 +794,10 @@ function PrayerList({ prayers, updatePrayerStatus, showControls }) {
 
         {pending.map((p) => (
           <div className="noticeCard" key={p.id}>
-            <strong>{p.title}</strong>
-            <p>{p.message}</p>
+            <strong>{p.title || "Pedido de oração"}</strong>
+            <p>{p.message || p.pedido}</p>
             <small>
-              {p.anonymous ? "Anônimo" : p.name} · {p.department || "Não informado"}
+              {p.anonymous ? "Anônimo" : p.name || p.membro} · {p.department || "Não informado"}
             </small>
 
             {showControls && (
@@ -747,10 +825,10 @@ function PrayerList({ prayers, updatePrayerStatus, showControls }) {
 
         {done.map((p) => (
           <div className="noticeCard" key={p.id}>
-            <strong>{p.title}</strong>
-            <p>{p.message}</p>
+            <strong>{p.title || "Pedido de oração"}</strong>
+            <p>{p.message || p.pedido}</p>
             <small>
-              {p.anonymous ? "Anônimo" : p.name} · Atendido
+              {p.anonymous ? "Anônimo" : p.name || p.membro} · Atendido
             </small>
           </div>
         ))}
@@ -1233,9 +1311,7 @@ function MembersList({ members, limited }) {
           )}
 
           {(m.telefone_responsavel || m.responsiblePhone) && (
-            <small>
-              Contato: {m.telefone_responsavel || m.responsiblePhone}
-            </small>
+            <small>Contato: {m.telefone_responsavel || m.responsiblePhone}</small>
           )}
         </div>
       ))}
@@ -1262,61 +1338,11 @@ function Alerts() {
   );
 }
 
-function BottomNav({ tab, setTab }) {
-  const itemStyle = { fontSize: 9 };
-
-  return (
-    <nav
-      className="nav"
-      style={{
-        gridTemplateColumns: "repeat(7, 1fr)",
-        height: 76,
-        gap: 2,
-        padding: 7
-      }}
-    >
-      <button className={tab === "home" ? "active" : ""} onClick={() => setTab("home")}>
-        <Home size={16} />
-        <span style={itemStyle}>Início</span>
-      </button>
-
-      <button className={tab === "agenda" ? "active" : ""} onClick={() => setTab("agenda")}>
-        <CalendarDays size={16} />
-        <span style={itemStyle}>Agenda</span>
-      </button>
-
-      <button className={tab === "notices" ? "active" : ""} onClick={() => setTab("notices")}>
-        <Bell size={16} />
-        <span style={itemStyle}>Avisos</span>
-      </button>
-
-      <button className={tab === "contribution" ? "active" : ""} onClick={() => setTab("contribution")}>
-        <CircleDollarSign size={16} />
-        <span style={itemStyle}>Pix</span>
-      </button>
-
-      <button className={tab === "prayer" ? "active" : ""} onClick={() => setTab("prayer")}>
-        <HeartHandshake size={16} />
-        <span style={itemStyle}>Oração</span>
-      </button>
-
-      <button className={tab === "chat" ? "active" : ""} onClick={() => setTab("chat")}>
-        <MessageCircle size={16} />
-        <span style={itemStyle}>IA</span>
-      </button>
-
-      <button className={tab === "profile" ? "active" : ""} onClick={() => setTab("profile")}>
-        <User size={16} />
-        <span style={itemStyle}>Perfil</span>
-      </button>
-    </nav>
-  );
-}
-
 export default function App() {
   const [role, setRole] = useState(null);
   const [selectedRole, setSelectedRole] = useState(null);
   const [tab, setTab] = useState("home");
+  const [menuOpen, setMenuOpen] = useState(false);
   const [members, setMembers] = useState([]);
   const [notices, setNotices] = useState([]);
   const [events, setEvents] = useState([]);
@@ -1407,6 +1433,7 @@ export default function App() {
     setRole(null);
     setSelectedRole(null);
     setTab("home");
+    setMenuOpen(false);
   }
 
   async function loadMembers() {
@@ -1503,6 +1530,8 @@ export default function App() {
       title: prayer.title,
       message: prayer.message,
       anonymous: prayer.anonymous,
+      membro: prayer.name,
+      pedido: prayer.message,
       status: "Pendente"
     });
 
@@ -1595,10 +1624,24 @@ export default function App() {
   return (
     <div className="app">
       <div className="phone">
-        <Header role={role} logout={logout} />
+        <Header
+          role={role}
+          logout={logout}
+          openMenu={() => setMenuOpen(true)}
+        />
+
+        <SideMenu
+          open={menuOpen}
+          closeMenu={() => setMenuOpen(false)}
+          tab={tab}
+          setTab={setTab}
+          role={role}
+          logout={logout}
+        />
+
         <OfflineBanner online={online} />
+
         {content}
-        {role && <BottomNav tab={tab} setTab={setTab} />}
       </div>
     </div>
   );
