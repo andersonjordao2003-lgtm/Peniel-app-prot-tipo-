@@ -1244,3 +1244,26 @@ button {
     transform: translateX(0);
   }
 }
+.pastorTabs {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.pastorTabs button {
+  min-width: fit-content;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: white;
+  color: var(--blue);
+  font-weight: 850;
+  box-shadow: 0 8px 20px rgba(16,43,87,.08);
+}
+
+.pastorTabs button.active {
+  background: linear-gradient(135deg, var(--blue), var(--blue2));
+  color: white;
+}
