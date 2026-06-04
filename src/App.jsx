@@ -243,6 +243,7 @@ function AuthPage({ selectedRole, setSelectedRole, login, addMember }) {
           login={login}
           method={method}
           addMember={addMember}
+          setMode={setMode}
         />
       )}
     </main>
@@ -273,7 +274,7 @@ function LoginForm({ selectedRole, login, method }) {
   );
 }
 
-function RegisterForm({ selectedRole, login, method, addMember }) {
+function RegisterForm({ selectedRole, login, method, addMember, setMode }) {
   const [form, setForm] = useState({
     name: "",
     birth: "",
@@ -292,13 +293,28 @@ function RegisterForm({ selectedRole, login, method, addMember }) {
   }
 
   async function submit() {
-    if (selectedRole === "member") {
-      await addMember({
-        ...form,
-        age,
-        responsible: minor ? form.responsible : "",
-        responsiblePhone: minor ? form.responsiblePhone : ""
-      });
+    const result = await addMember({
+      ...form,
+      age,
+      responsible: minor ? form.responsible : "",
+      responsiblePhone: minor ? form.responsiblePhone : ""
+    });
+
+    if (result?.duplicate) {
+      const goLogin = window.confirm(
+        "Já existe um cadastro com essas informações. Deseja ir para a tela de login?"
+      );
+
+      if (goLogin) {
+        setMode("login");
+      }
+
+      return;
+    }
+
+    if (result?.error) {
+      alert("Não foi possível criar o cadastro. Verifique os dados e tente novamente.");
+      return;
     }
 
     localStorage.setItem("peniel_profile_name", form.name || "Membro Peniel");
@@ -402,9 +418,19 @@ function RegisterForm({ selectedRole, login, method, addMember }) {
   );
 }
 
-function HomePage({ role, members, notices, events, online }) {
+function HomePage({ role, members, notices, events, online, prayers, updatePrayerStatus }) {
   if (role === "leader") return <LeaderPage members={members} />;
-  if (role === "pastor") return <PastorPage members={members} notices={notices} />;
+  if (role === "pastor") {
+    return (
+      <PastorPage
+        members={members}
+        notices={notices}
+        events={events}
+        prayers={prayers}
+        updatePrayerStatus={updatePrayerStatus}
+      />
+    );
+  }
 
   const nextEvent = events[0];
 
@@ -472,30 +498,36 @@ function AgendaPage({ events, online }) {
         </section>
       )}
 
-      <section className="section">
-        <div className="sectionTitle">
-          <h3>Eventos</h3>
-          <CalendarDays size={20} />
-        </div>
-
-        <div className="agenda">
-          {events.length === 0 && (
-            <div className="emptyState">Nenhum evento cadastrado.</div>
-          )}
-
-          {events.map((item) => (
-            <div className="agendaItem" key={item.id}>
-              <strong>{item.event_day?.slice(0, 3) || "Dia"}</strong>
-              <div>
-                <h4>{item.title}</h4>
-                <p>{item.event_time} · {item.department || "Todos"}</p>
-                {item.description && <p>{item.description}</p>}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <EventsList events={events} />
     </div>
+  );
+}
+
+function EventsList({ events }) {
+  return (
+    <section className="section">
+      <div className="sectionTitle">
+        <h3>Eventos</h3>
+        <CalendarDays size={20} />
+      </div>
+
+      <div className="agenda">
+        {events.length === 0 && (
+          <div className="emptyState">Nenhum evento cadastrado.</div>
+        )}
+
+        {events.map((item) => (
+          <div className="agendaItem" key={item.id}>
+            <strong>{item.event_day?.slice(0, 3) || "Dia"}</strong>
+            <div>
+              <h4>{item.title}</h4>
+              <p>{item.event_time} · {item.department || "Todos"}</p>
+              {item.description && <p>{item.description}</p>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -507,31 +539,37 @@ function NoticesPage({ notices, online }) {
         <h2>Avisos da igreja</h2>
       </section>
 
-      <section className="section">
-        <div className="sectionTitle">
-          <h3>Comunicados</h3>
-          <Bell size={20} />
-        </div>
-
-        {!online && (
-          <div className="emptyState">
-            Não foi possível conectar no momento. Verifique sua rede e tente novamente.
-          </div>
-        )}
-
-        {online && notices.length === 0 && (
-          <div className="emptyState">Nenhum aviso publicado ainda.</div>
-        )}
-
-        {online && notices.map((notice) => (
-          <div className="noticeCard" key={notice.id}>
-            <strong>{notice.title}</strong>
-            <p>{notice.message}</p>
-            <small>{notice.target || "Todos"} · {notice.author || "Peniel"}</small>
-          </div>
-        ))}
-      </section>
+      <NoticesList notices={notices} online={online} />
     </div>
+  );
+}
+
+function NoticesList({ notices, online }) {
+  return (
+    <section className="section">
+      <div className="sectionTitle">
+        <h3>Comunicados</h3>
+        <Bell size={20} />
+      </div>
+
+      {!online && (
+        <div className="emptyState">
+          Não foi possível conectar no momento. Verifique sua rede e tente novamente.
+        </div>
+      )}
+
+      {online && notices.length === 0 && (
+        <div className="emptyState">Nenhum aviso publicado ainda.</div>
+      )}
+
+      {online && notices.map((notice) => (
+        <div className="noticeCard" key={notice.id}>
+          <strong>{notice.title}</strong>
+          <p>{notice.message}</p>
+          <small>{notice.target || "Todos"} · {notice.author || "Peniel"}</small>
+        </div>
+      ))}
+    </section>
   );
 }
 
@@ -1032,38 +1070,91 @@ function LeaderPage({ members }) {
   );
 }
 
-function PastorPage({ members, notices }) {
+function PastorPage({ members, notices, events, prayers, updatePrayerStatus }) {
+  const [panelTab, setPanelTab] = useState("overview");
+
+  const pendingPrayers = prayers.filter((p) => p.status !== "Atendido");
+
   return (
     <div className="page">
       <section className="welcome">
         <p>Painel pastoral</p>
-        <h2>Visão geral</h2>
+        <h2>Administração</h2>
       </section>
 
-      <div className="stats">
-        <div>
-          <strong>{members.length}</strong>
-          <span>Membros</span>
-        </div>
-
-        <div>
-          <strong>7</strong>
-          <span>Departamentos</span>
-        </div>
-
-        <div>
-          <strong>{notices.length}</strong>
-          <span>Avisos</span>
-        </div>
+      <div className="pastorTabs">
+        <button className={panelTab === "overview" ? "active" : ""} onClick={() => setPanelTab("overview")}>
+          Geral
+        </button>
+        <button className={panelTab === "notices" ? "active" : ""} onClick={() => setPanelTab("notices")}>
+          Avisos
+        </button>
+        <button className={panelTab === "agenda" ? "active" : ""} onClick={() => setPanelTab("agenda")}>
+          Agenda
+        </button>
+        <button className={panelTab === "members" ? "active" : ""} onClick={() => setPanelTab("members")}>
+          Membros
+        </button>
+        <button className={panelTab === "prayers" ? "active" : ""} onClick={() => setPanelTab("prayers")}>
+          Oração
+        </button>
+        <button className={panelTab === "alerts" ? "active" : ""} onClick={() => setPanelTab("alerts")}>
+          Alertas
+        </button>
       </div>
 
-      <NoticeComposer />
+      {panelTab === "overview" && (
+        <>
+          <div className="stats">
+            <div>
+              <strong>{members.length}</strong>
+              <span>Membros</span>
+            </div>
 
-      <EventComposer />
+            <div>
+              <strong>{notices.length}</strong>
+              <span>Avisos</span>
+            </div>
 
-      <MembersList members={members} />
+            <div>
+              <strong>{pendingPrayers.length}</strong>
+              <span>Orações</span>
+            </div>
+          </div>
 
-      <Alerts />
+          <section className="section">
+            <div className="sectionTitle">
+              <h3>Resumo</h3>
+              <ShieldAlert size={20} />
+            </div>
+
+            <div className="emptyState">
+              Use as abas acima para gerenciar avisos, agenda, membros, pedidos de oração e alertas pastorais.
+            </div>
+          </section>
+        </>
+      )}
+
+      {panelTab === "notices" && <NoticeComposer />}
+
+      {panelTab === "agenda" && (
+        <>
+          <EventComposer />
+          <EventsList events={events} />
+        </>
+      )}
+
+      {panelTab === "members" && <MembersList members={members} />}
+
+      {panelTab === "prayers" && (
+        <PrayerList
+          prayers={prayers}
+          updatePrayerStatus={updatePrayerStatus}
+          showControls
+        />
+      )}
+
+      {panelTab === "alerts" && <Alerts />}
     </div>
   );
 }
@@ -1370,29 +1461,17 @@ export default function App() {
 
     const noticeChannel = supabase
       .channel("notices-feed")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "notices" },
-        () => loadNotices()
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, () => loadNotices())
       .subscribe();
 
     const prayerChannel = supabase
       .channel("prayers-feed")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "prayer_requests" },
-        () => loadPrayers()
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "prayer_requests" }, () => loadPrayers())
       .subscribe();
 
     const eventChannel = supabase
       .channel("events-feed")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "dynamic_events" },
-        () => loadEvents()
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "dynamic_events" }, () => loadEvents())
       .subscribe();
 
     function goOnline() {
@@ -1490,15 +1569,31 @@ export default function App() {
       .order("created_at", { ascending: false })
       .limit(1);
 
-    if (!error && data && data.length > 0) {
-      setContribution(data[0]);
-    }
+    if (!error && data && data.length > 0) setContribution(data[0]);
   }
 
   async function addMember(member) {
     if (!navigator.onLine) {
       alert("Não foi possível conectar no momento. Verifique sua rede e tente novamente.");
-      return;
+      return { error: true };
+    }
+
+    const cleanName = member.name.trim().toLowerCase();
+    const cleanPhone = member.phone.trim();
+
+    const { data: existingMembers, error: searchError } = await supabase
+      .from("members")
+      .select("*")
+      .or(
+        `telefone.eq.${cleanPhone},and(nome.ilike.${member.name.trim()},nascimento.eq.${member.birth})`
+      );
+
+    if (searchError) {
+      return { error: true };
+    }
+
+    if (existingMembers && existingMembers.length > 0) {
+      return { duplicate: true };
     }
 
     const { error } = await supabase
@@ -1515,7 +1610,10 @@ export default function App() {
         ativo: true
       });
 
-    if (!error) await loadMembers();
+    if (error) return { error: true };
+
+    await loadMembers();
+    return { success: true };
   }
 
   async function addPrayer(prayer) {
@@ -1616,6 +1714,8 @@ export default function App() {
         members={members}
         notices={notices}
         events={events}
+        prayers={prayers}
+        updatePrayerStatus={updatePrayerStatus}
         online={online}
       />
     );
@@ -1624,11 +1724,7 @@ export default function App() {
   return (
     <div className="app">
       <div className="phone">
-        <Header
-          role={role}
-          logout={logout}
-          openMenu={() => setMenuOpen(true)}
-        />
+        <Header role={role} logout={logout} openMenu={() => setMenuOpen(true)} />
 
         <SideMenu
           open={menuOpen}
