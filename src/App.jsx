@@ -5,7 +5,7 @@ import {
   ChevronRight, HandHeart, Mail, Phone, UserPlus, KeyRound,
   WifiOff, Megaphone, PlusCircle, Copy, QrCode, Upload,
   CircleDollarSign, User, HeartHandshake, CheckCircle2,
-  Menu, X
+  Menu, X, Clock, Image, Video
 } from "lucide-react";
 
 import { supabase } from "./supabaseClient";
@@ -22,6 +22,24 @@ const departments = [
   { name: "Mídia", icon: Camera }
 ];
 
+const prayerCategories = [
+  "Saúde",
+  "Família",
+  "Financeiro",
+  "Emocional",
+  "Espiritual",
+  "Relacionamento",
+  "Trabalho",
+  "Outro"
+];
+
+const followupTypes = [
+  "Pedido de oração",
+  "Preciso conversar com um líder",
+  "Preciso conversar com o pastor",
+  "Preciso de acompanhamento pastoral"
+];
+
 const alerts = [
   { level: "Atenção", name: "Mariana Souza", text: "Acompanhamento pastoral recomendado." },
   { level: "Urgente", name: "Usuário teste", text: "Alerta crítico demonstrativo." }
@@ -34,9 +52,7 @@ function calculateAge(birth) {
   let age = today.getFullYear() - date.getFullYear();
   const month = today.getMonth() - date.getMonth();
 
-  if (month < 0 || (month === 0 && today.getDate() < date.getDate())) {
-    age--;
-  }
+  if (month < 0 || (month === 0 && today.getDate() < date.getDate())) age--;
 
   return age;
 }
@@ -47,6 +63,12 @@ function getProfile() {
     dept: localStorage.getItem("peniel_profile_dept") || "Não informado",
     phone: localStorage.getItem("peniel_profile_phone") || "Não informado"
   };
+}
+
+function getRoleName(role) {
+  if (role === "pastor") return "Pastor";
+  if (role === "leader") return "Líder / Coordenador";
+  return "Membro";
 }
 
 function Header({ role, logout, openMenu }) {
@@ -86,17 +108,12 @@ function SideMenu({ open, closeMenu, tab, setTab, role, logout }) {
     { id: "agenda", label: "Agenda", icon: CalendarDays },
     { id: "notices", label: "Avisos", icon: Bell },
     { id: "contribution", label: "Dízimos / Pix", icon: CircleDollarSign },
-    { id: "prayer", label: "Pedidos de oração", icon: HeartHandshake },
+    { id: "prayer", label: "Centro de oração", icon: HeartHandshake },
+    { id: "attendance", label: "Presença", icon: CheckCircle2 },
+    { id: "media", label: "Mídia", icon: Camera },
     { id: "chat", label: "Assistente IA", icon: MessageCircle },
     { id: "profile", label: "Meu perfil", icon: User }
   ];
-
-  const roleName =
-    role === "pastor"
-      ? "Pastor"
-      : role === "leader"
-      ? "Líder / Coordenador"
-      : "Membro";
 
   function goTo(id) {
     setTab(id);
@@ -113,7 +130,7 @@ function SideMenu({ open, closeMenu, tab, setTab, role, logout }) {
 
           <div>
             <h2>Peniel</h2>
-            <p>{roleName}</p>
+            <p>{getRoleName(role)}</p>
           </div>
 
           <button className="drawerClose" onClick={closeMenu}>
@@ -243,7 +260,6 @@ function AuthPage({ selectedRole, setSelectedRole, login, addMember, loginWithCr
       {mode === "login" ? (
         <LoginForm
           selectedRole={selectedRole}
-          login={login}
           method={method}
           loginWithCredentials={loginWithCredentials}
         />
@@ -251,7 +267,6 @@ function AuthPage({ selectedRole, setSelectedRole, login, addMember, loginWithCr
         <RegisterForm
           selectedRole={selectedRole}
           login={login}
-          method={method}
           addMember={addMember}
           setMode={setMode}
         />
@@ -331,7 +346,7 @@ function LoginForm({ selectedRole, method, loginWithCredentials }) {
   );
 }
 
-function RegisterForm({ selectedRole, login, method, addMember, setMode }) {
+function RegisterForm({ selectedRole, login, addMember, setMode }) {
   const [form, setForm] = useState({
     name: "",
     birth: "",
@@ -364,6 +379,7 @@ function RegisterForm({ selectedRole, login, method, addMember, setMode }) {
     const result = await addMember({
       ...form,
       age,
+      role: selectedRole,
       responsible: minor ? form.responsible : "",
       responsiblePhone: minor ? form.responsiblePhone : ""
     });
@@ -373,10 +389,7 @@ function RegisterForm({ selectedRole, login, method, addMember, setMode }) {
         "Já existe um cadastro com essas informações. Deseja ir para a tela de login?"
       );
 
-      if (goLogin) {
-        setMode("login");
-      }
-
+      if (goLogin) setMode("login");
       return;
     }
 
@@ -478,8 +491,8 @@ function RegisterForm({ selectedRole, login, method, addMember, setMode }) {
   );
 }
 
-function HomePage({ role, members, notices, events, online, prayers, updatePrayerStatus }) {
-  if (role === "leader") return <LeaderPage members={members} />;
+function HomePage({ role, members, notices, events, online, prayers, attendance }) {
+  if (role === "leader") return <LeaderPage members={members} attendance={attendance} />;
 
   if (role === "pastor") {
     return (
@@ -488,7 +501,7 @@ function HomePage({ role, members, notices, events, online, prayers, updatePraye
         notices={notices}
         events={events}
         prayers={prayers}
-        updatePrayerStatus={updatePrayerStatus}
+        attendance={attendance}
       />
     );
   }
@@ -765,8 +778,8 @@ function PrayerPage({ role, prayers, addPrayer, updatePrayerStatus, online }) {
     return (
       <div className="page">
         <section className="welcome">
-          <p>Oração</p>
-          <h2>Pedidos recebidos</h2>
+          <p>Centro de oração</p>
+          <h2>Cuidado pastoral</h2>
         </section>
 
         <PrayerList prayers={prayers} updatePrayerStatus={updatePrayerStatus} showControls />
@@ -777,14 +790,14 @@ function PrayerPage({ role, prayers, addPrayer, updatePrayerStatus, online }) {
   return (
     <div className="page">
       <section className="welcome">
-        <p>Oração</p>
-        <h2>Pedido de oração</h2>
+        <p>Centro de oração</p>
+        <h2>Como podemos cuidar de você?</h2>
       </section>
 
       {!online && (
         <section className="section">
           <div className="emptyState">
-            Sem conexão. Não será possível enviar pedidos neste momento.
+            Sem conexão. Não será possível enviar sua solicitação neste momento.
           </div>
         </section>
       )}
@@ -793,7 +806,7 @@ function PrayerPage({ role, prayers, addPrayer, updatePrayerStatus, online }) {
 
       <section className="section">
         <div className="emptyState">
-          Seu pedido será enviado para a liderança da igreja para acompanhamento em oração.
+          Sua solicitação será enviada de forma privada para a liderança responsável. O objetivo é cuidado, oração e acompanhamento.
         </div>
       </section>
     </div>
@@ -806,6 +819,8 @@ function PrayerForm({ addPrayer }) {
   const [form, setForm] = useState({
     title: "",
     message: "",
+    category: "Espiritual",
+    followup_type: "Pedido de oração",
     anonymous: false
   });
 
@@ -815,7 +830,7 @@ function PrayerForm({ addPrayer }) {
 
   async function submit() {
     if (!form.title.trim() || !form.message.trim()) {
-      alert("Preencha o título e o pedido de oração.");
+      alert("Preencha o título e a mensagem.");
       return;
     }
 
@@ -824,12 +839,17 @@ function PrayerForm({ addPrayer }) {
       department: profile.dept,
       title: form.title,
       message: form.message,
-      anonymous: form.anonymous
+      category: form.category,
+      followup_type: form.followup_type,
+      anonymous: form.anonymous,
+      priority: form.followup_type === "Pedido de oração" ? "Normal" : "Alta"
     });
 
     setForm({
       title: "",
       message: "",
+      category: "Espiritual",
+      followup_type: "Pedido de oração",
       anonymous: false
     });
   }
@@ -837,34 +857,45 @@ function PrayerForm({ addPrayer }) {
   return (
     <section className="section">
       <div className="sectionTitle">
-        <h3>Novo pedido</h3>
+        <h3>Nova solicitação</h3>
         <HeartHandshake size={20} />
       </div>
 
       <div className="noticeForm">
+        <label>Tipo de cuidado</label>
+        <select value={form.followup_type} onChange={(e) => update("followup_type", e.target.value)}>
+          {followupTypes.map((type) => (
+            <option key={type}>{type}</option>
+          ))}
+        </select>
+
+        <label>Categoria</label>
+        <select value={form.category} onChange={(e) => update("category", e.target.value)}>
+          {prayerCategories.map((cat) => (
+            <option key={cat}>{cat}</option>
+          ))}
+        </select>
+
         <label>Título</label>
         <input
           value={form.title}
           onChange={(e) => update("title", e.target.value)}
-          placeholder="Ex: Saúde da minha família"
+          placeholder="Ex: Preciso de oração pela minha família"
         />
 
-        <label>Pedido</label>
+        <label>Mensagem</label>
         <textarea
           value={form.message}
           onChange={(e) => update("message", e.target.value)}
-          placeholder="Digite seu pedido de oração..."
+          placeholder="Digite sua solicitação..."
         />
 
-        <button
-          className="secondaryBtn"
-          onClick={() => update("anonymous", !form.anonymous)}
-        >
+        <button className="secondaryBtn" onClick={() => update("anonymous", !form.anonymous)}>
           {form.anonymous ? "✓ Enviar anonimamente" : "Enviar identificado"}
         </button>
 
         <button className="primaryBtn" onClick={submit}>
-          Enviar pedido
+          Enviar solicitação
         </button>
       </div>
     </section>
@@ -872,40 +903,68 @@ function PrayerForm({ addPrayer }) {
 }
 
 function PrayerList({ prayers, updatePrayerStatus, showControls }) {
-  const pending = prayers.filter((p) => p.status !== "Atendido");
+  const received = prayers.filter((p) => !p.status || p.status === "Pendente" || p.status === "Recebido");
+  const following = prayers.filter((p) => p.status === "Em acompanhamento");
   const done = prayers.filter((p) => p.status === "Atendido");
+
+  function PrayerCard({ p }) {
+    const high = p.priority === "Alta" || p.followup_type !== "Pedido de oração";
+
+    return (
+      <div className={`noticeCard ${high ? "prayerHigh" : ""}`} key={p.id}>
+        <strong>{p.title || "Pedido de oração"}</strong>
+        <p>{p.message || p.pedido}</p>
+        <small>
+          {p.anonymous ? "Anônimo" : p.name || p.membro} · {p.department || "Não informado"}
+        </small>
+        <small>
+          {p.category || "Outro"} · {p.followup_type || "Pedido de oração"}
+        </small>
+
+        {high && (
+          <div className="careBadge">
+            <ShieldAlert size={15} />
+            Solicita acompanhamento
+          </div>
+        )}
+
+        {showControls && (
+          <>
+            <button className="secondaryBtn" onClick={() => updatePrayerStatus(p.id, "Em acompanhamento")}>
+              <Clock size={17} />
+              Em acompanhamento
+            </button>
+
+            <button className="secondaryBtn" onClick={() => updatePrayerStatus(p.id, "Atendido")}>
+              <CheckCircle2 size={17} />
+              Marcar como atendido
+            </button>
+          </>
+        )}
+      </div>
+    );
+  }
 
   return (
     <>
       <section className="section">
         <div className="sectionTitle">
-          <h3>Pendentes</h3>
+          <h3>Recebidos</h3>
           <HeartHandshake size={20} />
         </div>
 
-        {pending.length === 0 && (
-          <div className="emptyState">Nenhum pedido pendente.</div>
-        )}
+        {received.length === 0 && <div className="emptyState">Nenhuma solicitação recebida.</div>}
+        {received.map((p) => <PrayerCard p={p} key={p.id} />)}
+      </section>
 
-        {pending.map((p) => (
-          <div className="noticeCard" key={p.id}>
-            <strong>{p.title || "Pedido de oração"}</strong>
-            <p>{p.message || p.pedido}</p>
-            <small>
-              {p.anonymous ? "Anônimo" : p.name || p.membro} · {p.department || "Não informado"}
-            </small>
+      <section className="section">
+        <div className="sectionTitle">
+          <h3>Em acompanhamento</h3>
+          <Clock size={20} />
+        </div>
 
-            {showControls && (
-              <button
-                className="secondaryBtn"
-                onClick={() => updatePrayerStatus(p.id, "Atendido")}
-              >
-                <CheckCircle2 size={17} />
-                Marcar como atendido
-              </button>
-            )}
-          </div>
-        ))}
+        {following.length === 0 && <div className="emptyState">Nenhuma solicitação em acompanhamento.</div>}
+        {following.map((p) => <PrayerCard p={p} key={p.id} />)}
       </section>
 
       <section className="section">
@@ -914,21 +973,211 @@ function PrayerList({ prayers, updatePrayerStatus, showControls }) {
           <CheckCircle2 size={20} />
         </div>
 
-        {done.length === 0 && (
-          <div className="emptyState">Nenhum pedido atendido ainda.</div>
+        {done.length === 0 && <div className="emptyState">Nenhuma solicitação atendida ainda.</div>}
+        {done.map((p) => <PrayerCard p={p} key={p.id} />)}
+      </section>
+    </>
+  );
+}
+
+function AttendancePage({ role, members, events, attendance, markAttendance, online }) {
+  if (role !== "pastor" && role !== "leader") {
+    return (
+      <div className="page">
+        <section className="welcome">
+          <p>Presença</p>
+          <h2>Acompanhamento pastoral</h2>
+        </section>
+
+        <section className="section">
+          <div className="emptyState">
+            Esta área é usada pela liderança para registrar presença nos cultos e eventos.
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  const [selectedEventId, setSelectedEventId] = useState("");
+  const selectedEvent = events.find((e) => e.id === selectedEventId) || events[0];
+
+  const recordsForEvent = attendance.filter((a) => {
+    if (!selectedEvent) return false;
+    return String(a.event_id) === String(selectedEvent.id);
+  });
+
+  const presentCount = recordsForEvent.filter((r) => r.status === "Presente").length;
+  const absentCount = recordsForEvent.filter((r) => r.status === "Ausente").length;
+
+  function memberStatus(member) {
+    const found = recordsForEvent.find((r) => String(r.member_id) === String(member.id));
+    return found?.status || "Não marcado";
+  }
+
+  return (
+    <div className="page">
+      <section className="welcome">
+        <p>Presença</p>
+        <h2>Registro por liderança</h2>
+      </section>
+
+      {!online && (
+        <section className="section">
+          <div className="emptyState">Sem conexão. Não será possível salvar presenças neste momento.</div>
+        </section>
+      )}
+
+      <section className="section">
+        <div className="sectionTitle">
+          <h3>Evento</h3>
+          <CalendarDays size={20} />
+        </div>
+
+        {events.length === 0 && (
+          <div className="emptyState">Cadastre um evento na agenda antes de registrar presença.</div>
         )}
 
-        {done.map((p) => (
-          <div className="noticeCard" key={p.id}>
-            <strong>{p.title || "Pedido de oração"}</strong>
-            <p>{p.message || p.pedido}</p>
-            <small>
-              {p.anonymous ? "Anônimo" : p.name || p.membro} · Atendido
-            </small>
+        {events.length > 0 && (
+          <>
+            <label>Selecione o culto/evento</label>
+            <select value={selectedEvent?.id || ""} onChange={(e) => setSelectedEventId(e.target.value)}>
+              {events.map((event) => (
+                <option key={event.id} value={event.id}>
+                  {event.title} · {event.event_day} {event.event_time}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
+      </section>
+
+      <div className="stats">
+        <div>
+          <strong>{presentCount}</strong>
+          <span>Presentes</span>
+        </div>
+
+        <div>
+          <strong>{absentCount}</strong>
+          <span>Ausentes</span>
+        </div>
+
+        <div>
+          <strong>{members.length}</strong>
+          <span>Membros</span>
+        </div>
+      </div>
+
+      <section className="section">
+        <div className="sectionTitle">
+          <h3>Lista de presença</h3>
+          <CheckCircle2 size={20} />
+        </div>
+
+        {members.length === 0 && <div className="emptyState">Nenhum membro cadastrado.</div>}
+
+        {members.map((member) => (
+          <div className="member" key={member.id}>
+            <strong>{member.nome || "Membro"}</strong>
+            <span>{member.departamento || "Sem departamento"} · {memberStatus(member)}</span>
+
+            <button className="secondaryBtn" onClick={() => markAttendance(selectedEvent, member, "Presente")}>
+              Marcar presente
+            </button>
+
+            <button className="secondaryBtn" onClick={() => markAttendance(selectedEvent, member, "Ausente")}>
+              Marcar ausente
+            </button>
           </div>
         ))}
       </section>
-    </>
+
+      <section className="section">
+        <div className="sectionTitle">
+          <h3>Histórico recente</h3>
+          <Clock size={20} />
+        </div>
+
+        {attendance.length === 0 && <div className="emptyState">Nenhum registro de presença ainda.</div>}
+
+        {attendance.slice(0, 8).map((record) => (
+          <div className="noticeCard" key={record.id}>
+            <strong>{record.member_name}</strong>
+            <p>{record.event_title}</p>
+            <small>{record.department || "Não informado"} · {record.status}</small>
+          </div>
+        ))}
+      </section>
+    </div>
+  );
+}
+
+function MediaPage({ role }) {
+  function fakeUpload() {
+    alert("Na versão oficial, esta área enviará fotos e vídeos para o Storage do Supabase.");
+  }
+
+  const mediaItems = [
+    {
+      title: "Culto da Família",
+      type: "Fotos",
+      amount: "32 fotos",
+      description: "Registro visual do culto de domingo."
+    },
+    {
+      title: "Reunião de Jovens",
+      type: "Vídeos",
+      amount: "4 vídeos",
+      description: "Trechos para redes sociais e arquivo da igreja."
+    },
+    {
+      title: "Banco de artes",
+      type: "Arquivos",
+      amount: "Logos e banners",
+      description: "Materiais visuais da Congregação Peniel."
+    }
+  ];
+
+  return (
+    <div className="page">
+      <section className="welcome">
+        <p>Mídia</p>
+        <h2>Galeria da igreja</h2>
+      </section>
+
+      {(role === "pastor" || role === "leader") && (
+        <section className="section">
+          <div className="sectionTitle">
+            <h3>Enviar mídia</h3>
+            <Upload size={20} />
+          </div>
+
+          <div className="emptyState">
+            A equipe de mídia poderá anexar fotos, vídeos, artes e materiais da igreja.
+          </div>
+
+          <button className="primaryBtn" onClick={fakeUpload}>
+            <Upload size={18} />
+            Adicionar foto ou vídeo
+          </button>
+        </section>
+      )}
+
+      <section className="section">
+        <div className="sectionTitle">
+          <h3>Mural de mídia</h3>
+          <Camera size={20} />
+        </div>
+
+        {mediaItems.map((item, index) => (
+          <div className="noticeCard" key={index}>
+            <strong>{item.title}</strong>
+            <p>{item.description}</p>
+            <small>{item.type} · {item.amount}</small>
+          </div>
+        ))}
+      </section>
+    </div>
   );
 }
 
@@ -936,12 +1185,7 @@ function ProfilePage({ role, logout }) {
   const [editing, setEditing] = useState(false);
   const [profile, setProfile] = useState(getProfile());
 
-  const roleName =
-    role === "pastor"
-      ? "Pastor"
-      : role === "leader"
-      ? "Líder / Coordenador"
-      : "Membro";
+  const roleName = getRoleName(role);
 
   function saveProfile() {
     localStorage.setItem("peniel_profile_name", profile.name);
@@ -1108,7 +1352,7 @@ function ChatPage({ online }) {
   );
 }
 
-function LeaderPage({ members }) {
+function LeaderPage({ members, attendance }) {
   const visibleMembers = members.filter((m) => {
     const dept = m.departamento || m.dept;
     return dept === "Jovens" || dept === "Adolescentes";
@@ -1122,15 +1366,29 @@ function LeaderPage({ members }) {
       </section>
 
       <MembersList members={visibleMembers} limited />
+
+      <section className="section">
+        <div className="sectionTitle">
+          <h3>Presença</h3>
+          <CheckCircle2 size={20} />
+        </div>
+
+        <div className="emptyState">
+          Use a aba Presença no menu lateral para registrar presença dos membros nos cultos e eventos.
+        </div>
+      </section>
+
       <Alerts />
     </div>
   );
 }
 
-function PastorPage({ members, notices, events, prayers, updatePrayerStatus }) {
+function PastorPage({ members, notices, events, prayers, attendance }) {
   const [panelTab, setPanelTab] = useState("overview");
 
   const pendingPrayers = prayers.filter((p) => p.status !== "Atendido");
+  const presentCount = attendance.filter((a) => a.status === "Presente").length;
+  const absentCount = attendance.filter((a) => a.status === "Ausente").length;
 
   return (
     <div className="page">
@@ -1153,7 +1411,10 @@ function PastorPage({ members, notices, events, prayers, updatePrayerStatus }) {
           Membros
         </button>
         <button className={panelTab === "prayers" ? "active" : ""} onClick={() => setPanelTab("prayers")}>
-          Oração
+          Cuidado
+        </button>
+        <button className={panelTab === "attendance" ? "active" : ""} onClick={() => setPanelTab("attendance")}>
+          Presença
         </button>
         <button className={panelTab === "alerts" ? "active" : ""} onClick={() => setPanelTab("alerts")}>
           Alertas
@@ -1169,13 +1430,13 @@ function PastorPage({ members, notices, events, prayers, updatePrayerStatus }) {
             </div>
 
             <div>
-              <strong>{notices.length}</strong>
-              <span>Avisos</span>
+              <strong>{pendingPrayers.length}</strong>
+              <span>Cuidados</span>
             </div>
 
             <div>
-              <strong>{pendingPrayers.length}</strong>
-              <span>Orações</span>
+              <strong>{presentCount}</strong>
+              <span>Presenças</span>
             </div>
           </div>
 
@@ -1186,7 +1447,7 @@ function PastorPage({ members, notices, events, prayers, updatePrayerStatus }) {
             </div>
 
             <div className="emptyState">
-              Use as abas acima para gerenciar avisos, agenda, membros, pedidos de oração e alertas pastorais.
+              Use as abas acima para gerenciar avisos, agenda, membros, cuidado pastoral, presença e alertas.
             </div>
           </section>
         </>
@@ -1204,11 +1465,47 @@ function PastorPage({ members, notices, events, prayers, updatePrayerStatus }) {
       {panelTab === "members" && <MembersList members={members} />}
 
       {panelTab === "prayers" && (
-        <PrayerList
-          prayers={prayers}
-          updatePrayerStatus={updatePrayerStatus}
-          showControls
-        />
+        <PrayerList prayers={prayers} updatePrayerStatus={() => {}} showControls={false} />
+      )}
+
+      {panelTab === "attendance" && (
+        <>
+          <div className="stats">
+            <div>
+              <strong>{presentCount}</strong>
+              <span>Presentes</span>
+            </div>
+
+            <div>
+              <strong>{absentCount}</strong>
+              <span>Ausentes</span>
+            </div>
+
+            <div>
+              <strong>{attendance.length}</strong>
+              <span>Registros</span>
+            </div>
+          </div>
+
+          <section className="section">
+            <div className="sectionTitle">
+              <h3>Histórico de presença</h3>
+              <CheckCircle2 size={20} />
+            </div>
+
+            {attendance.length === 0 && (
+              <div className="emptyState">Nenhum registro de presença ainda.</div>
+            )}
+
+            {attendance.slice(0, 12).map((record) => (
+              <div className="noticeCard" key={record.id}>
+                <strong>{record.member_name}</strong>
+                <p>{record.event_title}</p>
+                <small>{record.department || "Não informado"} · {record.status}</small>
+              </div>
+            ))}
+          </section>
+        </>
       )}
 
       {panelTab === "alerts" && <Alerts />}
@@ -1293,10 +1590,7 @@ function NoticeComposer() {
           />
 
           <label>Destinatários</label>
-          <select
-            value={notice.target}
-            onChange={(e) => update("target", e.target.value)}
-          >
+          <select value={notice.target} onChange={(e) => update("target", e.target.value)}>
             <option>Todos</option>
             {departments.map((d) => (
               <option key={d.name}>{d.name}</option>
@@ -1377,31 +1671,16 @@ function EventComposer() {
       {open && (
         <div className="noticeForm">
           <label>Título</label>
-          <input
-            value={event.title}
-            onChange={(e) => update("title", e.target.value)}
-            placeholder="Ex: Culto de jovens"
-          />
+          <input value={event.title} onChange={(e) => update("title", e.target.value)} placeholder="Ex: Culto de jovens" />
 
           <label>Dia</label>
-          <input
-            value={event.event_day}
-            onChange={(e) => update("event_day", e.target.value)}
-            placeholder="Ex: Sexta-feira"
-          />
+          <input value={event.event_day} onChange={(e) => update("event_day", e.target.value)} placeholder="Ex: Sexta-feira" />
 
           <label>Horário</label>
-          <input
-            value={event.event_time}
-            onChange={(e) => update("event_time", e.target.value)}
-            placeholder="Ex: 19:30"
-          />
+          <input value={event.event_time} onChange={(e) => update("event_time", e.target.value)} placeholder="Ex: 19:30" />
 
           <label>Departamento</label>
-          <select
-            value={event.department}
-            onChange={(e) => update("department", e.target.value)}
-          >
+          <select value={event.department} onChange={(e) => update("department", e.target.value)}>
             <option>Todos</option>
             {departments.map((d) => (
               <option key={d.name}>{d.name}</option>
@@ -1409,11 +1688,7 @@ function EventComposer() {
           </select>
 
           <label>Descrição</label>
-          <textarea
-            value={event.description}
-            onChange={(e) => update("description", e.target.value)}
-            placeholder="Detalhes do evento..."
-          />
+          <textarea value={event.description} onChange={(e) => update("description", e.target.value)} placeholder="Detalhes do evento..." />
 
           <button className="primaryBtn" onClick={publishEvent}>
             Criar evento
@@ -1450,21 +1725,10 @@ function MembersList({ members, limited }) {
             {m.idade || m.age || "--"} anos · {m.departamento || m.dept || "Sem departamento"}
           </span>
 
-          {(m.username) && (
-            <small>Usuário: {m.username}</small>
-          )}
-
-          {(m.telefone || m.phone) && (
-            <small>Telefone: {m.telefone || m.phone}</small>
-          )}
-
-          {(m.responsavel || m.responsible) && (
-            <small>Responsável: {m.responsavel || m.responsible}</small>
-          )}
-
-          {(m.telefone_responsavel || m.responsiblePhone) && (
-            <small>Contato: {m.telefone_responsavel || m.responsiblePhone}</small>
-          )}
+          {m.username && <small>Usuário: {m.username}</small>}
+          {(m.telefone || m.phone) && <small>Telefone: {m.telefone || m.phone}</small>}
+          {(m.responsavel || m.responsible) && <small>Responsável: {m.responsavel || m.responsible}</small>}
+          {(m.telefone_responsavel || m.responsiblePhone) && <small>Contato: {m.telefone_responsavel || m.responsiblePhone}</small>}
         </div>
       ))}
     </section>
@@ -1499,6 +1763,7 @@ export default function App() {
   const [notices, setNotices] = useState([]);
   const [events, setEvents] = useState([]);
   const [prayers, setPrayers] = useState([]);
+  const [attendance, setAttendance] = useState([]);
   const [contribution, setContribution] = useState(null);
   const [splash, setSplash] = useState(true);
   const [online, setOnline] = useState(navigator.onLine);
@@ -1519,6 +1784,7 @@ export default function App() {
     loadContribution();
     loadEvents();
     loadPrayers();
+    loadAttendance();
 
     const noticeChannel = supabase
       .channel("notices-feed")
@@ -1535,6 +1801,11 @@ export default function App() {
       .on("postgres_changes", { event: "*", schema: "public", table: "dynamic_events" }, () => loadEvents())
       .subscribe();
 
+    const attendanceChannel = supabase
+      .channel("attendance-feed")
+      .on("postgres_changes", { event: "*", schema: "public", table: "attendance_records" }, () => loadAttendance())
+      .subscribe();
+
     function goOnline() {
       setOnline(true);
       loadMembers();
@@ -1542,6 +1813,7 @@ export default function App() {
       loadContribution();
       loadEvents();
       loadPrayers();
+      loadAttendance();
     }
 
     function goOffline() {
@@ -1556,6 +1828,7 @@ export default function App() {
       supabase.removeChannel(noticeChannel);
       supabase.removeChannel(prayerChannel);
       supabase.removeChannel(eventChannel);
+      supabase.removeChannel(attendanceChannel);
       window.removeEventListener("online", goOnline);
       window.removeEventListener("offline", goOffline);
     };
@@ -1649,6 +1922,17 @@ export default function App() {
     if (!error && data) setPrayers(data);
   }
 
+  async function loadAttendance() {
+    if (!navigator.onLine) return;
+
+    const { data, error } = await supabase
+      .from("attendance_records")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && data) setAttendance(data);
+  }
+
   async function loadContribution() {
     if (!navigator.onLine) return;
 
@@ -1701,7 +1985,7 @@ export default function App() {
         departamento: member.dept,
         responsavel: member.responsible,
         telefone_responsavel: member.responsiblePhone,
-        cargo: selectedRoleToCargo(member),
+        cargo: member.role === "pastor" ? "Pastor" : member.role === "leader" ? "Líder / Coordenador" : "Membro",
         ativo: true
       });
 
@@ -1711,13 +1995,9 @@ export default function App() {
     return { success: true };
   }
 
-  function selectedRoleToCargo(member) {
-    return "Membro";
-  }
-
   async function addPrayer(prayer) {
     if (!navigator.onLine) {
-      alert("Não foi possível enviar o pedido. Verifique sua conexão.");
+      alert("Não foi possível enviar a solicitação. Verifique sua conexão.");
       return;
     }
 
@@ -1726,19 +2006,23 @@ export default function App() {
       department: prayer.department,
       title: prayer.title,
       message: prayer.message,
+      category: prayer.category,
+      followup_type: prayer.followup_type,
       anonymous: prayer.anonymous,
+      priority: prayer.priority,
+      private_to_leadership: true,
       membro: prayer.name,
       pedido: prayer.message,
-      status: "Pendente"
+      status: "Recebido"
     });
 
     if (error) {
-      alert("Não foi possível enviar o pedido.");
+      alert("Não foi possível enviar a solicitação.");
       return;
     }
 
     await loadPrayers();
-    alert("Pedido de oração enviado.");
+    alert("Solicitação enviada. Estamos orando e cuidando de você. 💙");
   }
 
   async function updatePrayerStatus(id, status) {
@@ -1753,11 +2037,56 @@ export default function App() {
       .eq("id", id);
 
     if (error) {
-      alert("Não foi possível atualizar o pedido.");
+      alert("Não foi possível atualizar a solicitação.");
       return;
     }
 
     await loadPrayers();
+  }
+
+  async function markAttendance(event, member, status) {
+    if (!event) {
+      alert("Cadastre ou selecione um evento primeiro.");
+      return;
+    }
+
+    if (!navigator.onLine) {
+      alert("Sem conexão. Não foi possível salvar presença.");
+      return;
+    }
+
+    const existing = attendance.find(
+      (a) => String(a.event_id) === String(event.id) && String(a.member_id) === String(member.id)
+    );
+
+    if (existing) {
+      const { error } = await supabase
+        .from("attendance_records")
+        .update({ status })
+        .eq("id", existing.id);
+
+      if (error) {
+        alert("Não foi possível atualizar presença.");
+        return;
+      }
+    } else {
+      const { error } = await supabase.from("attendance_records").insert({
+        event_id: event.id,
+        event_title: event.title,
+        member_id: member.id,
+        member_name: member.nome,
+        department: member.departamento,
+        status,
+        marked_by: "Liderança Peniel"
+      });
+
+      if (error) {
+        alert("Não foi possível registrar presença.");
+        return;
+      }
+    }
+
+    await loadAttendance();
   }
 
   if (splash) {
@@ -1803,6 +2132,19 @@ export default function App() {
         online={online}
       />
     );
+  } else if (tab === "attendance") {
+    content = (
+      <AttendancePage
+        role={role}
+        members={members}
+        events={events}
+        attendance={attendance}
+        markAttendance={markAttendance}
+        online={online}
+      />
+    );
+  } else if (tab === "media") {
+    content = <MediaPage role={role} />;
   } else if (tab === "chat") {
     content = <ChatPage online={online} />;
   } else if (tab === "profile") {
@@ -1815,7 +2157,7 @@ export default function App() {
         notices={notices}
         events={events}
         prayers={prayers}
-        updatePrayerStatus={updatePrayerStatus}
+        attendance={attendance}
         online={online}
       />
     );
