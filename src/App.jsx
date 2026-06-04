@@ -189,9 +189,9 @@ function Login({ setSelectedRole }) {
   );
 }
 
-function AuthPage({ selectedRole, setSelectedRole, login, addMember }) {
+function AuthPage({ selectedRole, setSelectedRole, login, addMember, loginWithCredentials }) {
   const [mode, setMode] = useState("login");
-  const [method, setMethod] = useState("phone");
+  const [method, setMethod] = useState("app");
 
   const roleName =
     selectedRole === "member"
@@ -223,7 +223,12 @@ function AuthPage({ selectedRole, setSelectedRole, login, addMember }) {
         </button>
       </div>
 
-      <div className="authMethods twoMethods">
+      <div className="authMethods">
+        <button className={method === "app" ? "active" : ""} onClick={() => setMethod("app")}>
+          <KeyRound size={16} />
+          Usuário
+        </button>
+
         <button className={method === "google" ? "active" : ""} onClick={() => setMethod("google")}>
           <Mail size={16} />
           Google
@@ -236,7 +241,12 @@ function AuthPage({ selectedRole, setSelectedRole, login, addMember }) {
       </div>
 
       {mode === "login" ? (
-        <LoginForm selectedRole={selectedRole} login={login} method={method} />
+        <LoginForm
+          selectedRole={selectedRole}
+          login={login}
+          method={method}
+          loginWithCredentials={loginWithCredentials}
+        />
       ) : (
         <RegisterForm
           selectedRole={selectedRole}
@@ -250,14 +260,58 @@ function AuthPage({ selectedRole, setSelectedRole, login, addMember }) {
   );
 }
 
-function LoginForm({ selectedRole, login, method }) {
+function LoginForm({ selectedRole, method, loginWithCredentials }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  async function submitLogin() {
+    if (!username.trim() || !password.trim()) {
+      alert("Preencha o nome de usuário e a senha.");
+      return;
+    }
+
+    await loginWithCredentials(selectedRole, username, password);
+  }
+
   return (
     <section className="section">
+      {method === "app" && (
+        <>
+          <label>Nome de usuário</label>
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Digite seu nome de usuário"
+          />
+
+          <label>Senha</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Digite sua senha"
+          />
+
+          <button className="primaryBtn" onClick={submitLogin}>
+            Entrar
+          </button>
+        </>
+      )}
+
       {method === "google" && (
-        <button className="googleBtn" onClick={() => login(selectedRole)}>
-          <Mail size={18} />
-          Entrar com Google
-        </button>
+        <>
+          <button
+            className="googleBtn"
+            onClick={() => alert("Login com Google será ativado na versão oficial.")}
+          >
+            <Mail size={18} />
+            Entrar com Google
+          </button>
+
+          <div className="emptyState">
+            Em breve, esta opção fará login usando uma conta Google real.
+          </div>
+        </>
       )}
 
       {method === "phone" && (
@@ -265,8 +319,11 @@ function LoginForm({ selectedRole, login, method }) {
           <label>Número de telefone</label>
           <input placeholder="(21) 99999-9999" />
 
-          <button className="primaryBtn" onClick={() => login(selectedRole)}>
-            Entrar
+          <button
+            className="primaryBtn"
+            onClick={() => alert("Login por telefone usará código SMS na versão oficial.")}
+          >
+            Receber código por SMS
           </button>
         </>
       )}
@@ -282,6 +339,7 @@ function RegisterForm({ selectedRole, login, method, addMember, setMode }) {
     dept: "Jovens",
     responsible: "",
     responsiblePhone: "",
+    username: "",
     password: ""
   });
 
@@ -293,6 +351,16 @@ function RegisterForm({ selectedRole, login, method, addMember, setMode }) {
   }
 
   async function submit() {
+    if (!form.name.trim()) {
+      alert("Preencha seu nome completo.");
+      return;
+    }
+
+    if (!form.username.trim() || !form.password.trim()) {
+      alert("Crie um nome de usuário e uma senha para acessar o aplicativo.");
+      return;
+    }
+
     const result = await addMember({
       ...form,
       age,
@@ -329,29 +397,33 @@ function RegisterForm({ selectedRole, login, method, addMember, setMode }) {
 
   return (
     <section className="section">
-      {method === "google" && (
-        <button className="googleBtn">
-          <Mail size={18} />
-          Continuar com Google
-        </button>
-      )}
-
-      {method === "phone" && (
-        <>
-          <label>Número de telefone</label>
-          <input
-            value={form.phone}
-            onChange={(e) => update("phone", e.target.value)}
-            placeholder="(21) 99999-9999"
-          />
-        </>
-      )}
-
       <label>Nome completo</label>
       <input
         value={form.name}
         onChange={(e) => update("name", e.target.value)}
         placeholder="Digite seu nome"
+      />
+
+      <label>Nome de usuário</label>
+      <input
+        value={form.username}
+        onChange={(e) => update("username", e.target.value)}
+        placeholder="Ex: anderson.peniel"
+      />
+
+      <label>Criar senha</label>
+      <input
+        type="password"
+        value={form.password}
+        onChange={(e) => update("password", e.target.value)}
+        placeholder="Digite uma senha"
+      />
+
+      <label>Telefone</label>
+      <input
+        value={form.phone}
+        onChange={(e) => update("phone", e.target.value)}
+        placeholder="(21) 99999-9999"
       />
 
       <label>Data de nascimento</label>
@@ -376,18 +448,6 @@ function RegisterForm({ selectedRole, login, method, addMember, setMode }) {
         <>
           <label>Função</label>
           <input placeholder={selectedRole === "leader" ? "Ex: Líder de jovens" : "Ex: Pastor dirigente"} />
-        </>
-      )}
-
-      {method === "phone" && (
-        <>
-          <label>Criar senha</label>
-          <input
-            type="password"
-            value={form.password}
-            onChange={(e) => update("password", e.target.value)}
-            placeholder="Digite uma senha"
-          />
         </>
       )}
 
@@ -420,6 +480,7 @@ function RegisterForm({ selectedRole, login, method, addMember, setMode }) {
 
 function HomePage({ role, members, notices, events, online, prayers, updatePrayerStatus }) {
   if (role === "leader") return <LeaderPage members={members} />;
+
   if (role === "pastor") {
     return (
       <PastorPage
@@ -708,11 +769,7 @@ function PrayerPage({ role, prayers, addPrayer, updatePrayerStatus, online }) {
           <h2>Pedidos recebidos</h2>
         </section>
 
-        <PrayerList
-          prayers={prayers}
-          updatePrayerStatus={updatePrayerStatus}
-          showControls
-        />
+        <PrayerList prayers={prayers} updatePrayerStatus={updatePrayerStatus} showControls />
       </div>
     );
   }
@@ -1393,6 +1450,10 @@ function MembersList({ members, limited }) {
             {m.idade || m.age || "--"} anos · {m.departamento || m.dept || "Sem departamento"}
           </span>
 
+          {(m.username) && (
+            <small>Usuário: {m.username}</small>
+          )}
+
           {(m.telefone || m.phone) && (
             <small>Telefone: {m.telefone || m.phone}</small>
           )}
@@ -1507,6 +1568,35 @@ export default function App() {
     setTab("home");
   }
 
+  async function loginWithCredentials(selectedRole, username, password) {
+    if (!navigator.onLine) {
+      alert("Não foi possível entrar. Verifique sua conexão.");
+      return;
+    }
+
+    const cleanUsername = username.trim().toLowerCase();
+
+    const { data, error } = await supabase
+      .from("members")
+      .select("*")
+      .eq("username", cleanUsername)
+      .eq("password", password.trim())
+      .limit(1);
+
+    if (error || !data || data.length === 0) {
+      alert("Usuário ou senha incorretos.");
+      return;
+    }
+
+    const user = data[0];
+
+    localStorage.setItem("peniel_profile_name", user.nome || "Usuário Peniel");
+    localStorage.setItem("peniel_profile_dept", user.departamento || "Não informado");
+    localStorage.setItem("peniel_profile_phone", user.telefone || "Não informado");
+
+    login(selectedRole);
+  }
+
   function logout() {
     localStorage.removeItem("peniel_role");
     setRole(null);
@@ -1578,35 +1668,40 @@ export default function App() {
       return { error: true };
     }
 
-    const cleanName = member.name.trim().toLowerCase();
+    const cleanUsername = member.username.trim().toLowerCase();
     const cleanPhone = member.phone.trim();
 
-    const { data: existingMembers, error: searchError } = await supabase
+    const { data: allMembers, error: searchError } = await supabase
       .from("members")
-      .select("*")
-      .or(
-        `telefone.eq.${cleanPhone},and(nome.ilike.${member.name.trim()},nascimento.eq.${member.birth})`
-      );
+      .select("*");
 
-    if (searchError) {
-      return { error: true };
-    }
+    if (searchError) return { error: true };
 
-    if (existingMembers && existingMembers.length > 0) {
-      return { duplicate: true };
-    }
+    const duplicate = allMembers.some((m) => {
+      const sameUsername = (m.username || "").toLowerCase() === cleanUsername;
+      const samePhone = cleanPhone && (m.telefone || "") === cleanPhone;
+      const sameNameBirth =
+        (m.nome || "").trim().toLowerCase() === member.name.trim().toLowerCase() &&
+        String(m.nascimento || "") === String(member.birth || "");
+
+      return sameUsername || samePhone || sameNameBirth;
+    });
+
+    if (duplicate) return { duplicate: true };
 
     const { error } = await supabase
       .from("members")
       .insert({
         nome: member.name,
+        username: cleanUsername,
+        password: member.password,
         nascimento: member.birth,
         idade: member.age,
         telefone: member.phone,
         departamento: member.dept,
         responsavel: member.responsible,
         telefone_responsavel: member.responsiblePhone,
-        cargo: "Membro",
+        cargo: selectedRoleToCargo(member),
         ativo: true
       });
 
@@ -1614,6 +1709,10 @@ export default function App() {
 
     await loadMembers();
     return { success: true };
+  }
+
+  function selectedRoleToCargo(member) {
+    return "Membro";
   }
 
   async function addPrayer(prayer) {
@@ -1685,6 +1784,7 @@ export default function App() {
         setSelectedRole={setSelectedRole}
         login={login}
         addMember={addMember}
+        loginWithCredentials={loginWithCredentials}
       />
     );
   } else if (tab === "agenda") {
