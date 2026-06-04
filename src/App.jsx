@@ -1,11 +1,37 @@
 import React, { useEffect, useState } from "react";
 import {
-  Bell, CalendarDays, Home, LogOut, MessageCircle, Send,
-  ShieldAlert, Users, Music, Camera, Baby, UserRound, Heart,
-  ChevronRight, HandHeart, Mail, Phone, UserPlus, KeyRound,
-  WifiOff, Megaphone, PlusCircle, Copy, QrCode, Upload,
-  CircleDollarSign, User, HeartHandshake, CheckCircle2,
-  Menu, X, Clock, Image, Video
+  Bell,
+  CalendarDays,
+  Home,
+  LogOut,
+  MessageCircle,
+  Send,
+  ShieldAlert,
+  Users,
+  Music,
+  Camera,
+  Baby,
+  UserRound,
+  Heart,
+  ChevronRight,
+  HandHeart,
+  Mail,
+  Phone,
+  UserPlus,
+  KeyRound,
+  WifiOff,
+  Megaphone,
+  PlusCircle,
+  Copy,
+  QrCode,
+  Upload,
+  CircleDollarSign,
+  User,
+  HeartHandshake,
+  CheckCircle2,
+  Menu,
+  X,
+  Clock
 } from "lucide-react";
 
 import { supabase } from "./supabaseClient";
@@ -40,19 +66,58 @@ const followupTypes = [
   "Preciso de acompanhamento pastoral"
 ];
 
+const mediaRecords = [
+  {
+    title: "Culto da Família",
+    date: "Domingo • 19h",
+    description: "Registro do culto de domingo na Congregação Peniel.",
+    photos: 32,
+    videos: 4,
+    category: "Cultos"
+  },
+  {
+    title: "Congresso de Jovens",
+    date: "Sábado • 18h",
+    description: "Momentos especiais do congresso do departamento de jovens.",
+    photos: 86,
+    videos: 12,
+    category: "Jovens"
+  },
+  {
+    title: "Batismo",
+    date: "Evento especial",
+    description: "Registro do batismo realizado pela igreja.",
+    photos: 24,
+    videos: 2,
+    category: "Batismos"
+  }
+];
+
 const alerts = [
-  { level: "Atenção", name: "Mariana Souza", text: "Acompanhamento pastoral recomendado." },
-  { level: "Urgente", name: "Usuário teste", text: "Alerta crítico demonstrativo." }
+  {
+    level: "Atenção",
+    name: "Mariana Souza",
+    text: "Acompanhamento pastoral recomendado."
+  },
+  {
+    level: "Urgente",
+    name: "Usuário teste",
+    text: "Alerta crítico demonstrativo."
+  }
 ];
 
 function calculateAge(birth) {
   if (!birth) return "";
+
   const today = new Date();
   const date = new Date(birth);
+
   let age = today.getFullYear() - date.getFullYear();
   const month = today.getMonth() - date.getMonth();
 
-  if (month < 0 || (month === 0 && today.getDate() < date.getDate())) age--;
+  if (month < 0 || (month === 0 && today.getDate() < date.getDate())) {
+    age--;
+  }
 
   return age;
 }
@@ -110,7 +175,7 @@ function SideMenu({ open, closeMenu, tab, setTab, role, logout }) {
     { id: "contribution", label: "Dízimos / Pix", icon: CircleDollarSign },
     { id: "prayer", label: "Centro de oração", icon: HeartHandshake },
     { id: "attendance", label: "Presença", icon: CheckCircle2 },
-    { id: "media", label: "Mídia", icon: Camera },
+    { id: "media", label: "Mural da Congregação", icon: Camera },
     { id: "chat", label: "Assistente IA", icon: MessageCircle },
     { id: "profile", label: "Meu perfil", icon: User }
   ];
@@ -206,7 +271,13 @@ function Login({ setSelectedRole }) {
   );
 }
 
-function AuthPage({ selectedRole, setSelectedRole, login, addMember, loginWithCredentials }) {
+function AuthPage({
+  selectedRole,
+  setSelectedRole,
+  login,
+  addMember,
+  loginWithCredentials
+}) {
   const [mode, setMode] = useState("login");
   const [method, setMethod] = useState("app");
 
@@ -229,29 +300,44 @@ function AuthPage({ selectedRole, setSelectedRole, login, addMember, loginWithCr
       </section>
 
       <div className="authTabs">
-        <button className={mode === "login" ? "active" : ""} onClick={() => setMode("login")}>
+        <button
+          className={mode === "login" ? "active" : ""}
+          onClick={() => setMode("login")}
+        >
           <KeyRound size={17} />
           Login
         </button>
 
-        <button className={mode === "register" ? "active" : ""} onClick={() => setMode("register")}>
+        <button
+          className={mode === "register" ? "active" : ""}
+          onClick={() => setMode("register")}
+        >
           <UserPlus size={17} />
           Cadastro
         </button>
       </div>
 
       <div className="authMethods">
-        <button className={method === "app" ? "active" : ""} onClick={() => setMethod("app")}>
+        <button
+          className={method === "app" ? "active" : ""}
+          onClick={() => setMethod("app")}
+        >
           <KeyRound size={16} />
           Usuário
         </button>
 
-        <button className={method === "google" ? "active" : ""} onClick={() => setMethod("google")}>
+        <button
+          className={method === "google" ? "active" : ""}
+          onClick={() => setMethod("google")}
+        >
           <Mail size={16} />
           Google
         </button>
 
-        <button className={method === "phone" ? "active" : ""} onClick={() => setMethod("phone")}>
+        <button
+          className={method === "phone" ? "active" : ""}
+          onClick={() => setMethod("phone")}
+        >
           <Phone size={16} />
           Telefone
         </button>
@@ -336,7 +422,9 @@ function LoginForm({ selectedRole, method, loginWithCredentials }) {
 
           <button
             className="primaryBtn"
-            onClick={() => alert("Login por telefone usará código SMS na versão oficial.")}
+            onClick={() =>
+              alert("Login por telefone usará código SMS na versão oficial.")
+            }
           >
             Receber código por SMS
           </button>
@@ -460,7 +548,13 @@ function RegisterForm({ selectedRole, login, addMember, setMode }) {
       {selectedRole !== "member" && (
         <>
           <label>Função</label>
-          <input placeholder={selectedRole === "leader" ? "Ex: Líder de jovens" : "Ex: Pastor dirigente"} />
+          <input
+            placeholder={
+              selectedRole === "leader"
+                ? "Ex: Líder de jovens"
+                : "Ex: Pastor dirigente"
+            }
+          />
         </>
       )}
 
@@ -491,8 +585,19 @@ function RegisterForm({ selectedRole, login, addMember, setMode }) {
   );
 }
 
-function HomePage({ role, members, notices, events, online, prayers, attendance }) {
-  if (role === "leader") return <LeaderPage members={members} attendance={attendance} />;
+function HomePage({
+  role,
+  members,
+  notices,
+  events,
+  online,
+  prayers,
+  attendance,
+  setTab
+}) {
+  if (role === "leader") {
+    return <LeaderPage members={members} attendance={attendance} />;
+  }
 
   if (role === "pastor") {
     return (
@@ -506,13 +611,32 @@ function HomePage({ role, members, notices, events, online, prayers, attendance 
     );
   }
 
+  const profile = getProfile();
   const nextEvent = events[0];
+  const pendingPrayers = prayers.filter((p) => p.status !== "Atendido").length;
+  const lastNotice = notices[0];
 
   return (
     <div className="page">
       <section className="welcome">
-        <p>Bem-vindo</p>
-        <h2>Congregação Peniel</h2>
+        <p>Bom dia 👋</p>
+        <h2>{profile.name}</h2>
+        <p>Que Deus abençoe seu dia.</p>
+      </section>
+
+      <section className="section verseCard">
+        <div className="sectionTitle">
+          <h3>Versículo do Dia</h3>
+          <Heart size={20} />
+        </div>
+
+        <p style={{ fontStyle: "italic", lineHeight: "1.6", color: "#374151" }}>
+          “Porque eu bem sei os planos que tenho para vós, diz o Senhor; planos de paz e não de mal.”
+        </p>
+
+        <strong style={{ display: "block", marginTop: 10, color: "#102b57" }}>
+          Jeremias 29:11
+        </strong>
       </section>
 
       <section className="nextEvent">
@@ -521,11 +645,41 @@ function HomePage({ role, members, notices, events, online, prayers, attendance 
           <h3>{nextEvent?.title || "Culto de Ensino"}</h3>
           <span>
             {nextEvent
-              ? `${nextEvent.event_day} · ${nextEvent.event_time}`
-              : "Quarta-feira · 19:00"}
+              ? `${nextEvent.event_day} • ${nextEvent.event_time}`
+              : "Quarta-feira • 19:00"}
           </span>
         </div>
+
         <CalendarDays size={30} />
+      </section>
+
+      <section className="section">
+        <div className="sectionTitle">
+          <h3>Acesso rápido</h3>
+          <Home size={20} />
+        </div>
+
+        <div className="quickGrid">
+          <button onClick={() => setTab("agenda")}>
+            <CalendarDays size={20} />
+            <span>Agenda</span>
+          </button>
+
+          <button onClick={() => setTab("notices")}>
+            <Bell size={20} />
+            <span>Avisos</span>
+          </button>
+
+          <button onClick={() => setTab("prayer")}>
+            <HeartHandshake size={20} />
+            <span>Oração</span>
+          </button>
+
+          <button onClick={() => setTab("contribution")}>
+            <CircleDollarSign size={20} />
+            <span>Pix</span>
+          </button>
+        </div>
       </section>
 
       <section className="section">
@@ -551,6 +705,67 @@ function HomePage({ role, members, notices, events, online, prayers, attendance 
             <small>{notice.target || "Todos"} · {notice.author || "Peniel"}</small>
           </div>
         ))}
+
+        {lastNotice && (
+          <button className="secondaryBtn" onClick={() => setTab("notices")}>
+            Ver todos os avisos
+          </button>
+        )}
+      </section>
+
+      <section className="section">
+        <div className="sectionTitle">
+          <h3>Centro de oração</h3>
+          <HeartHandshake size={20} />
+        </div>
+
+        <div className="noticeCard">
+          <strong>{pendingPrayers} solicitações em acompanhamento</strong>
+          <p>
+            Envie um pedido de oração ou solicite cuidado pastoral de forma privada.
+          </p>
+        </div>
+
+        <button className="secondaryBtn" onClick={() => setTab("prayer")}>
+          Abrir Centro de Oração
+        </button>
+      </section>
+
+      <section className="section">
+        <div className="sectionTitle">
+          <h3>Últimos registros</h3>
+          <Camera size={20} />
+        </div>
+
+        {mediaRecords.slice(0, 3).map((item) => (
+          <div className="noticeCard" key={item.title}>
+            <strong>📸 {item.title}</strong>
+            <p>{item.description}</p>
+            <small>
+              {item.photos} fotos · {item.videos} vídeos · {item.category}
+            </small>
+          </div>
+        ))}
+
+        <button className="secondaryBtn" onClick={() => setTab("media")}>
+          Abrir Mural da Congregação
+        </button>
+      </section>
+
+      <section className="section">
+        <div className="sectionTitle">
+          <h3>Dízimos e ofertas</h3>
+          <CircleDollarSign size={20} />
+        </div>
+
+        <div className="noticeCard">
+          <strong>Contribua com a obra</strong>
+          <p>Utilize a área de contribuição para acessar o Pix da igreja.</p>
+        </div>
+
+        <button className="secondaryBtn" onClick={() => setTab("contribution")}>
+          Ver Pix da igreja
+        </button>
       </section>
     </div>
   );
@@ -593,6 +808,7 @@ function EventsList({ events }) {
         {events.map((item) => (
           <div className="agendaItem" key={item.id}>
             <strong>{item.event_day?.slice(0, 3) || "Dia"}</strong>
+
             <div>
               <h4>{item.title}</h4>
               <p>{item.event_time} · {item.department || "Todos"}</p>
@@ -806,7 +1022,7 @@ function PrayerPage({ role, prayers, addPrayer, updatePrayerStatus, online }) {
 
       <section className="section">
         <div className="emptyState">
-          Sua solicitação será enviada de forma privada para a liderança responsável. O objetivo é cuidado, oração e acompanhamento.
+          Sua solicitação será enviada de forma privada para a liderança responsável.
         </div>
       </section>
     </div>
@@ -863,14 +1079,20 @@ function PrayerForm({ addPrayer }) {
 
       <div className="noticeForm">
         <label>Tipo de cuidado</label>
-        <select value={form.followup_type} onChange={(e) => update("followup_type", e.target.value)}>
+        <select
+          value={form.followup_type}
+          onChange={(e) => update("followup_type", e.target.value)}
+        >
           {followupTypes.map((type) => (
             <option key={type}>{type}</option>
           ))}
         </select>
 
         <label>Categoria</label>
-        <select value={form.category} onChange={(e) => update("category", e.target.value)}>
+        <select
+          value={form.category}
+          onChange={(e) => update("category", e.target.value)}
+        >
           {prayerCategories.map((cat) => (
             <option key={cat}>{cat}</option>
           ))}
@@ -890,7 +1112,10 @@ function PrayerForm({ addPrayer }) {
           placeholder="Digite sua solicitação..."
         />
 
-        <button className="secondaryBtn" onClick={() => update("anonymous", !form.anonymous)}>
+        <button
+          className="secondaryBtn"
+          onClick={() => update("anonymous", !form.anonymous)}
+        >
           {form.anonymous ? "✓ Enviar anonimamente" : "Enviar identificado"}
         </button>
 
@@ -903,7 +1128,9 @@ function PrayerForm({ addPrayer }) {
 }
 
 function PrayerList({ prayers, updatePrayerStatus, showControls }) {
-  const received = prayers.filter((p) => !p.status || p.status === "Pendente" || p.status === "Recebido");
+  const received = prayers.filter(
+    (p) => !p.status || p.status === "Pendente" || p.status === "Recebido"
+  );
   const following = prayers.filter((p) => p.status === "Em acompanhamento");
   const done = prayers.filter((p) => p.status === "Atendido");
 
@@ -914,9 +1141,12 @@ function PrayerList({ prayers, updatePrayerStatus, showControls }) {
       <div className={`noticeCard ${high ? "prayerHigh" : ""}`} key={p.id}>
         <strong>{p.title || "Pedido de oração"}</strong>
         <p>{p.message || p.pedido}</p>
+
         <small>
-          {p.anonymous ? "Anônimo" : p.name || p.membro} · {p.department || "Não informado"}
+          {p.anonymous ? "Anônimo" : p.name || p.membro} ·{" "}
+          {p.department || "Não informado"}
         </small>
+
         <small>
           {p.category || "Outro"} · {p.followup_type || "Pedido de oração"}
         </small>
@@ -930,12 +1160,18 @@ function PrayerList({ prayers, updatePrayerStatus, showControls }) {
 
         {showControls && (
           <>
-            <button className="secondaryBtn" onClick={() => updatePrayerStatus(p.id, "Em acompanhamento")}>
+            <button
+              className="secondaryBtn"
+              onClick={() => updatePrayerStatus(p.id, "Em acompanhamento")}
+            >
               <Clock size={17} />
               Em acompanhamento
             </button>
 
-            <button className="secondaryBtn" onClick={() => updatePrayerStatus(p.id, "Atendido")}>
+            <button
+              className="secondaryBtn"
+              onClick={() => updatePrayerStatus(p.id, "Atendido")}
+            >
               <CheckCircle2 size={17} />
               Marcar como atendido
             </button>
@@ -953,8 +1189,13 @@ function PrayerList({ prayers, updatePrayerStatus, showControls }) {
           <HeartHandshake size={20} />
         </div>
 
-        {received.length === 0 && <div className="emptyState">Nenhuma solicitação recebida.</div>}
-        {received.map((p) => <PrayerCard p={p} key={p.id} />)}
+        {received.length === 0 && (
+          <div className="emptyState">Nenhuma solicitação recebida.</div>
+        )}
+
+        {received.map((p) => (
+          <PrayerCard p={p} key={p.id} />
+        ))}
       </section>
 
       <section className="section">
@@ -963,8 +1204,13 @@ function PrayerList({ prayers, updatePrayerStatus, showControls }) {
           <Clock size={20} />
         </div>
 
-        {following.length === 0 && <div className="emptyState">Nenhuma solicitação em acompanhamento.</div>}
-        {following.map((p) => <PrayerCard p={p} key={p.id} />)}
+        {following.length === 0 && (
+          <div className="emptyState">Nenhuma solicitação em acompanhamento.</div>
+        )}
+
+        {following.map((p) => (
+          <PrayerCard p={p} key={p.id} />
+        ))}
       </section>
 
       <section className="section">
@@ -973,14 +1219,26 @@ function PrayerList({ prayers, updatePrayerStatus, showControls }) {
           <CheckCircle2 size={20} />
         </div>
 
-        {done.length === 0 && <div className="emptyState">Nenhuma solicitação atendida ainda.</div>}
-        {done.map((p) => <PrayerCard p={p} key={p.id} />)}
+        {done.length === 0 && (
+          <div className="emptyState">Nenhuma solicitação atendida ainda.</div>
+        )}
+
+        {done.map((p) => (
+          <PrayerCard p={p} key={p.id} />
+        ))}
       </section>
     </>
   );
 }
 
-function AttendancePage({ role, members, events, attendance, markAttendance, online }) {
+function AttendancePage({
+  role,
+  members,
+  events,
+  attendance,
+  markAttendance,
+  online
+}) {
   if (role !== "pastor" && role !== "leader") {
     return (
       <div className="page">
@@ -1010,7 +1268,9 @@ function AttendancePage({ role, members, events, attendance, markAttendance, onl
   const absentCount = recordsForEvent.filter((r) => r.status === "Ausente").length;
 
   function memberStatus(member) {
-    const found = recordsForEvent.find((r) => String(r.member_id) === String(member.id));
+    const found = recordsForEvent.find(
+      (r) => String(r.member_id) === String(member.id)
+    );
     return found?.status || "Não marcado";
   }
 
@@ -1023,7 +1283,9 @@ function AttendancePage({ role, members, events, attendance, markAttendance, onl
 
       {!online && (
         <section className="section">
-          <div className="emptyState">Sem conexão. Não será possível salvar presenças neste momento.</div>
+          <div className="emptyState">
+            Sem conexão. Não será possível salvar presenças neste momento.
+          </div>
         </section>
       )}
 
@@ -1034,13 +1296,18 @@ function AttendancePage({ role, members, events, attendance, markAttendance, onl
         </div>
 
         {events.length === 0 && (
-          <div className="emptyState">Cadastre um evento na agenda antes de registrar presença.</div>
+          <div className="emptyState">
+            Cadastre um evento na agenda antes de registrar presença.
+          </div>
         )}
 
         {events.length > 0 && (
           <>
             <label>Selecione o culto/evento</label>
-            <select value={selectedEvent?.id || ""} onChange={(e) => setSelectedEventId(e.target.value)}>
+            <select
+              value={selectedEvent?.id || ""}
+              onChange={(e) => setSelectedEventId(e.target.value)}
+            >
               {events.map((event) => (
                 <option key={event.id} value={event.id}>
                   {event.title} · {event.event_day} {event.event_time}
@@ -1074,18 +1341,28 @@ function AttendancePage({ role, members, events, attendance, markAttendance, onl
           <CheckCircle2 size={20} />
         </div>
 
-        {members.length === 0 && <div className="emptyState">Nenhum membro cadastrado.</div>}
+        {members.length === 0 && (
+          <div className="emptyState">Nenhum membro cadastrado.</div>
+        )}
 
         {members.map((member) => (
           <div className="member" key={member.id}>
             <strong>{member.nome || "Membro"}</strong>
-            <span>{member.departamento || "Sem departamento"} · {memberStatus(member)}</span>
+            <span>
+              {member.departamento || "Sem departamento"} · {memberStatus(member)}
+            </span>
 
-            <button className="secondaryBtn" onClick={() => markAttendance(selectedEvent, member, "Presente")}>
+            <button
+              className="secondaryBtn"
+              onClick={() => markAttendance(selectedEvent, member, "Presente")}
+            >
               Marcar presente
             </button>
 
-            <button className="secondaryBtn" onClick={() => markAttendance(selectedEvent, member, "Ausente")}>
+            <button
+              className="secondaryBtn"
+              onClick={() => markAttendance(selectedEvent, member, "Ausente")}
+            >
               Marcar ausente
             </button>
           </div>
@@ -1098,13 +1375,17 @@ function AttendancePage({ role, members, events, attendance, markAttendance, onl
           <Clock size={20} />
         </div>
 
-        {attendance.length === 0 && <div className="emptyState">Nenhum registro de presença ainda.</div>}
+        {attendance.length === 0 && (
+          <div className="emptyState">Nenhum registro de presença ainda.</div>
+        )}
 
         {attendance.slice(0, 8).map((record) => (
           <div className="noticeCard" key={record.id}>
             <strong>{record.member_name}</strong>
             <p>{record.event_title}</p>
-            <small>{record.department || "Não informado"} · {record.status}</small>
+            <small>
+              {record.department || "Não informado"} · {record.status}
+            </small>
           </div>
         ))}
       </section>
@@ -1117,65 +1398,60 @@ function MediaPage({ role }) {
     alert("Na versão oficial, esta área enviará fotos e vídeos para o Storage do Supabase.");
   }
 
-  const mediaItems = [
-    {
-      title: "Culto da Família",
-      type: "Fotos",
-      amount: "32 fotos",
-      description: "Registro visual do culto de domingo."
-    },
-    {
-      title: "Reunião de Jovens",
-      type: "Vídeos",
-      amount: "4 vídeos",
-      description: "Trechos para redes sociais e arquivo da igreja."
-    },
-    {
-      title: "Banco de artes",
-      type: "Arquivos",
-      amount: "Logos e banners",
-      description: "Materiais visuais da Congregação Peniel."
-    }
-  ];
-
   return (
     <div className="page">
       <section className="welcome">
-        <p>Mídia</p>
-        <h2>Galeria da igreja</h2>
+        <p>Mural</p>
+        <h2>Registros da Congregação</h2>
       </section>
 
       {(role === "pastor" || role === "leader") && (
         <section className="section">
           <div className="sectionTitle">
-            <h3>Enviar mídia</h3>
+            <h3>Central da Mídia</h3>
             <Upload size={20} />
           </div>
 
           <div className="emptyState">
-            A equipe de mídia poderá anexar fotos, vídeos, artes e materiais da igreja.
+            A equipe de mídia poderá criar álbuns, anexar fotos, vídeos, artes e materiais da igreja.
           </div>
 
           <button className="primaryBtn" onClick={fakeUpload}>
             <Upload size={18} />
-            Adicionar foto ou vídeo
+            Adicionar registro
           </button>
         </section>
       )}
 
       <section className="section">
         <div className="sectionTitle">
-          <h3>Mural de mídia</h3>
+          <h3>Álbuns da igreja</h3>
           <Camera size={20} />
         </div>
 
-        {mediaItems.map((item, index) => (
-          <div className="noticeCard" key={index}>
+        {mediaRecords.map((item) => (
+          <div className="noticeCard" key={item.title}>
             <strong>{item.title}</strong>
             <p>{item.description}</p>
-            <small>{item.type} · {item.amount}</small>
+            <small>
+              {item.date} · {item.photos} fotos · {item.videos} vídeos
+            </small>
           </div>
         ))}
+      </section>
+
+      <section className="section">
+        <div className="sectionTitle">
+          <h3>Categorias</h3>
+          <Camera size={20} />
+        </div>
+
+        <div className="campaignList">
+          <button>Cultos</button>
+          <button>Jovens</button>
+          <button>Batismos</button>
+          <button>Eventos</button>
+        </div>
       </section>
     </div>
   );
@@ -1398,25 +1674,52 @@ function PastorPage({ members, notices, events, prayers, attendance }) {
       </section>
 
       <div className="pastorTabs">
-        <button className={panelTab === "overview" ? "active" : ""} onClick={() => setPanelTab("overview")}>
+        <button
+          className={panelTab === "overview" ? "active" : ""}
+          onClick={() => setPanelTab("overview")}
+        >
           Geral
         </button>
-        <button className={panelTab === "notices" ? "active" : ""} onClick={() => setPanelTab("notices")}>
+
+        <button
+          className={panelTab === "notices" ? "active" : ""}
+          onClick={() => setPanelTab("notices")}
+        >
           Avisos
         </button>
-        <button className={panelTab === "agenda" ? "active" : ""} onClick={() => setPanelTab("agenda")}>
+
+        <button
+          className={panelTab === "agenda" ? "active" : ""}
+          onClick={() => setPanelTab("agenda")}
+        >
           Agenda
         </button>
-        <button className={panelTab === "members" ? "active" : ""} onClick={() => setPanelTab("members")}>
+
+        <button
+          className={panelTab === "members" ? "active" : ""}
+          onClick={() => setPanelTab("members")}
+        >
           Membros
         </button>
-        <button className={panelTab === "prayers" ? "active" : ""} onClick={() => setPanelTab("prayers")}>
+
+        <button
+          className={panelTab === "prayers" ? "active" : ""}
+          onClick={() => setPanelTab("prayers")}
+        >
           Cuidado
         </button>
-        <button className={panelTab === "attendance" ? "active" : ""} onClick={() => setPanelTab("attendance")}>
+
+        <button
+          className={panelTab === "attendance" ? "active" : ""}
+          onClick={() => setPanelTab("attendance")}
+        >
           Presença
         </button>
-        <button className={panelTab === "alerts" ? "active" : ""} onClick={() => setPanelTab("alerts")}>
+
+        <button
+          className={panelTab === "alerts" ? "active" : ""}
+          onClick={() => setPanelTab("alerts")}
+        >
           Alertas
         </button>
       </div>
@@ -1555,6 +1858,7 @@ function NoticeComposer() {
 
     setNotice({ title: "", message: "", target: "Todos" });
     setOpen(false);
+
     document.body.classList.add("successFlash");
     setTimeout(() => document.body.classList.remove("successFlash"), 700);
   }
@@ -1590,7 +1894,10 @@ function NoticeComposer() {
           />
 
           <label>Destinatários</label>
-          <select value={notice.target} onChange={(e) => update("target", e.target.value)}>
+          <select
+            value={notice.target}
+            onChange={(e) => update("target", e.target.value)}
+          >
             <option>Todos</option>
             {departments.map((d) => (
               <option key={d.name}>{d.name}</option>
@@ -1671,16 +1978,31 @@ function EventComposer() {
       {open && (
         <div className="noticeForm">
           <label>Título</label>
-          <input value={event.title} onChange={(e) => update("title", e.target.value)} placeholder="Ex: Culto de jovens" />
+          <input
+            value={event.title}
+            onChange={(e) => update("title", e.target.value)}
+            placeholder="Ex: Culto de jovens"
+          />
 
           <label>Dia</label>
-          <input value={event.event_day} onChange={(e) => update("event_day", e.target.value)} placeholder="Ex: Sexta-feira" />
+          <input
+            value={event.event_day}
+            onChange={(e) => update("event_day", e.target.value)}
+            placeholder="Ex: Sexta-feira"
+          />
 
           <label>Horário</label>
-          <input value={event.event_time} onChange={(e) => update("event_time", e.target.value)} placeholder="Ex: 19:30" />
+          <input
+            value={event.event_time}
+            onChange={(e) => update("event_time", e.target.value)}
+            placeholder="Ex: 19:30"
+          />
 
           <label>Departamento</label>
-          <select value={event.department} onChange={(e) => update("department", e.target.value)}>
+          <select
+            value={event.department}
+            onChange={(e) => update("department", e.target.value)}
+          >
             <option>Todos</option>
             {departments.map((d) => (
               <option key={d.name}>{d.name}</option>
@@ -1688,7 +2010,11 @@ function EventComposer() {
           </select>
 
           <label>Descrição</label>
-          <textarea value={event.description} onChange={(e) => update("description", e.target.value)} placeholder="Detalhes do evento..." />
+          <textarea
+            value={event.description}
+            onChange={(e) => update("description", e.target.value)}
+            placeholder="Detalhes do evento..."
+          />
 
           <button className="primaryBtn" onClick={publishEvent}>
             Criar evento
@@ -1722,13 +2048,22 @@ function MembersList({ members, limited }) {
           <strong>{m.nome || m.name || "Novo membro"}</strong>
 
           <span>
-            {m.idade || m.age || "--"} anos · {m.departamento || m.dept || "Sem departamento"}
+            {m.idade || m.age || "--"} anos ·{" "}
+            {m.departamento || m.dept || "Sem departamento"}
           </span>
 
           {m.username && <small>Usuário: {m.username}</small>}
-          {(m.telefone || m.phone) && <small>Telefone: {m.telefone || m.phone}</small>}
-          {(m.responsavel || m.responsible) && <small>Responsável: {m.responsavel || m.responsible}</small>}
-          {(m.telefone_responsavel || m.responsiblePhone) && <small>Contato: {m.telefone_responsavel || m.responsiblePhone}</small>}
+          {(m.telefone || m.phone) && (
+            <small>Telefone: {m.telefone || m.phone}</small>
+          )}
+          {(m.responsavel || m.responsible) && (
+            <small>Responsável: {m.responsavel || m.responsible}</small>
+          )}
+          {(m.telefone_responsavel || m.responsiblePhone) && (
+            <small>
+              Contato: {m.telefone_responsavel || m.responsiblePhone}
+            </small>
+          )}
         </div>
       ))}
     </section>
@@ -1744,7 +2079,10 @@ function Alerts() {
       </div>
 
       {alerts.map((a) => (
-        <div className={`alert ${a.level === "Urgente" ? "danger" : ""}`} key={a.name}>
+        <div
+          className={`alert ${a.level === "Urgente" ? "danger" : ""}`}
+          key={a.name}
+        >
           <strong>{a.level}</strong>
           <h4>{a.name}</h4>
           <p>{a.text}</p>
@@ -1759,12 +2097,14 @@ export default function App() {
   const [selectedRole, setSelectedRole] = useState(null);
   const [tab, setTab] = useState("home");
   const [menuOpen, setMenuOpen] = useState(false);
+
   const [members, setMembers] = useState([]);
   const [notices, setNotices] = useState([]);
   const [events, setEvents] = useState([]);
   const [prayers, setPrayers] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [contribution, setContribution] = useState(null);
+
   const [splash, setSplash] = useState(true);
   const [online, setOnline] = useState(navigator.onLine);
 
@@ -1788,22 +2128,36 @@ export default function App() {
 
     const noticeChannel = supabase
       .channel("notices-feed")
-      .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, () => loadNotices())
+      .on("postgres_changes", { event: "*", schema: "public", table: "notices" }, () =>
+        loadNotices()
+      )
       .subscribe();
 
     const prayerChannel = supabase
       .channel("prayers-feed")
-      .on("postgres_changes", { event: "*", schema: "public", table: "prayer_requests" }, () => loadPrayers())
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "prayer_requests" },
+        () => loadPrayers()
+      )
       .subscribe();
 
     const eventChannel = supabase
       .channel("events-feed")
-      .on("postgres_changes", { event: "*", schema: "public", table: "dynamic_events" }, () => loadEvents())
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "dynamic_events" },
+        () => loadEvents()
+      )
       .subscribe();
 
     const attendanceChannel = supabase
       .channel("attendance-feed")
-      .on("postgres_changes", { event: "*", schema: "public", table: "attendance_records" }, () => loadAttendance())
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "attendance_records" },
+        () => loadAttendance()
+      )
       .subscribe();
 
     function goOnline() {
@@ -1943,7 +2297,9 @@ export default function App() {
       .order("created_at", { ascending: false })
       .limit(1);
 
-    if (!error && data && data.length > 0) setContribution(data[0]);
+    if (!error && data && data.length > 0) {
+      setContribution(data[0]);
+    }
   }
 
   async function addMember(member) {
@@ -1973,21 +2329,24 @@ export default function App() {
 
     if (duplicate) return { duplicate: true };
 
-    const { error } = await supabase
-      .from("members")
-      .insert({
-        nome: member.name,
-        username: cleanUsername,
-        password: member.password,
-        nascimento: member.birth,
-        idade: member.age,
-        telefone: member.phone,
-        departamento: member.dept,
-        responsavel: member.responsible,
-        telefone_responsavel: member.responsiblePhone,
-        cargo: member.role === "pastor" ? "Pastor" : member.role === "leader" ? "Líder / Coordenador" : "Membro",
-        ativo: true
-      });
+    const { error } = await supabase.from("members").insert({
+      nome: member.name,
+      username: cleanUsername,
+      password: member.password,
+      nascimento: member.birth,
+      idade: member.age,
+      telefone: member.phone,
+      departamento: member.dept,
+      responsavel: member.responsible,
+      telefone_responsavel: member.responsiblePhone,
+      cargo:
+        member.role === "pastor"
+          ? "Pastor"
+          : member.role === "leader"
+          ? "Líder / Coordenador"
+          : "Membro",
+      ativo: true
+    });
 
     if (error) return { error: true };
 
@@ -2159,6 +2518,7 @@ export default function App() {
         prayers={prayers}
         attendance={attendance}
         online={online}
+        setTab={setTab}
       />
     );
   }
