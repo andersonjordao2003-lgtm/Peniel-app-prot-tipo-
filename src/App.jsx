@@ -191,7 +191,7 @@ function Login({ setSelectedRole }) {
 
 function AuthPage({ selectedRole, setSelectedRole, login, addMember }) {
   const [mode, setMode] = useState("login");
-  const [method, setMethod] = useState("google");
+  const [method, setMethod] = useState("phone");
 
   const roleName =
     selectedRole === "member"
