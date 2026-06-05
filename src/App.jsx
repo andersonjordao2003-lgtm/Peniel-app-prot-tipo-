@@ -589,6 +589,7 @@ function HomePage({
   const profile = getProfile();
   const nextEvent = events[0];
   const pendingPrayers = prayers.filter((p) => p.status !== "Atendido").length;
+  const pendingVisits = visits.filter((v) => v.status !== "Atendido").length;
 
   return (
     <div className="page">
@@ -629,45 +630,6 @@ function HomePage({
 
       <section className="section">
         <div className="sectionTitle">
-          <h3>Acesso rápido</h3>
-          <Home size={20} />
-        </div>
-
-        <div className="quickGrid">
-          <button className="quickCard" onClick={() => setTab("agenda")}>
-            <CalendarDays size={28} />
-            <span>Agenda</span>
-          </button>
-
-          <button className="quickCard" onClick={() => setTab("notices")}>
-            <Bell size={28} />
-            <span>Avisos</span>
-          </button>
-
-          <button className="quickCard" onClick={() => setTab("prayer")}>
-            <HeartHandshake size={28} />
-            <span>Oração</span>
-          </button>
-
-          <button className="quickCard" onClick={() => setTab("visit")}>
-            <House size={28} />
-            <span>Visita</span>
-          </button>
-
-          <button className="quickCard" onClick={() => setTab("contribution")}>
-            <CircleDollarSign size={28} />
-            <span>Pix</span>
-          </button>
-
-          <button className="quickCard" onClick={() => setTab("media")}>
-            <Camera size={28} />
-            <span>Mural</span>
-          </button>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="sectionTitle">
           <h3>Peniel Hoje</h3>
           <Church size={20} />
         </div>
@@ -687,6 +649,28 @@ function HomePage({
             <p>{notices[0].message}</p>
           </div>
         )}
+      </section>
+
+      <section className="section churchStatus">
+        <div className="sectionTitle">
+          <h3>Resumo da igreja</h3>
+          <Users size={20} />
+        </div>
+
+        <div className="noticeCard">
+          <strong>{pendingPrayers} pedidos em oração</strong>
+          <p>Solicitações espirituais recebidas pela liderança.</p>
+        </div>
+
+        <div className="noticeCard">
+          <strong>{pendingVisits} visitas pendentes</strong>
+          <p>Pedidos de visita e acompanhamento pastoral.</p>
+        </div>
+
+        <div className="noticeCard">
+          <strong>{members.length} membros cadastrados</strong>
+          <p>Base atual de membros registrados no aplicativo.</p>
+        </div>
       </section>
 
       <section className="section">
@@ -722,6 +706,26 @@ function HomePage({
 
       <section className="section">
         <div className="sectionTitle">
+          <h3>Centro de Apoio Espiritual</h3>
+          <HeartHandshake size={20} />
+        </div>
+
+        <div className="noticeCard">
+          <strong>Cuidado e oração</strong>
+          <p>Envie um pedido de oração ou fale com a liderança de forma privada.</p>
+        </div>
+
+        <button className="secondaryBtn" onClick={() => setTab("prayer")}>
+          Pedido de oração
+        </button>
+
+        <button className="secondaryBtn" onClick={() => setTab("visit")}>
+          Solicitar visita pastoral
+        </button>
+      </section>
+
+      <section className="section">
+        <div className="sectionTitle">
           <h3>Mural da Congregação</h3>
           <Camera size={20} />
         </div>
@@ -741,21 +745,17 @@ function HomePage({
 
       <section className="section">
         <div className="sectionTitle">
-          <h3>Centro de Apoio Espiritual</h3>
-          <HeartHandshake size={20} />
+          <h3>Dízimos e ofertas</h3>
+          <CircleDollarSign size={20} />
         </div>
 
         <div className="noticeCard">
-          <strong>{pendingPrayers} solicitações em acompanhamento</strong>
-          <p>Envie um pedido de oração ou fale com a liderança de forma privada.</p>
+          <strong>Contribua com a obra</strong>
+          <p>Utilize a área de contribuição para acessar o Pix da igreja.</p>
         </div>
 
-        <button className="secondaryBtn" onClick={() => setTab("prayer")}>
-          Pedido de oração
-        </button>
-
-        <button className="secondaryBtn" onClick={() => setTab("visit")}>
-          Solicitar visita pastoral
+        <button className="secondaryBtn" onClick={() => setTab("contribution")}>
+          Ver Pix da igreja
         </button>
       </section>
     </div>
