@@ -1,37 +1,11 @@
 import React, { useEffect, useState } from "react";
 import {
-  Bell,
-  CalendarDays,
-  Home,
-  LogOut,
-  MessageCircle,
-  Send,
-  ShieldAlert,
-  Users,
-  Music,
-  Camera,
-  Baby,
-  UserRound,
-  Heart,
-  ChevronRight,
-  HandHeart,
-  Mail,
-  Phone,
-  UserPlus,
-  KeyRound,
-  WifiOff,
-  Megaphone,
-  PlusCircle,
-  Copy,
-  QrCode,
-  Upload,
-  CircleDollarSign,
-  User,
-  HeartHandshake,
-  CheckCircle2,
-  Menu,
-  X,
-  Clock
+  Bell, CalendarDays, Home, LogOut, MessageCircle, Send,
+  ShieldAlert, Users, Music, Camera, Baby, UserRound, Heart,
+  ChevronRight, HandHeart, Mail, Phone, UserPlus, KeyRound,
+  WifiOff, Megaphone, PlusCircle, Copy, QrCode, Upload,
+  CircleDollarSign, User, HeartHandshake, CheckCircle2,
+  Menu, X, Clock, House, Church
 } from "lucide-react";
 
 import { supabase } from "./supabaseClient";
@@ -174,6 +148,7 @@ function SideMenu({ open, closeMenu, tab, setTab, role, logout }) {
     { id: "notices", label: "Avisos", icon: Bell },
     { id: "contribution", label: "Dízimos / Pix", icon: CircleDollarSign },
     { id: "prayer", label: "Centro de oração", icon: HeartHandshake },
+    { id: "visit", label: "Solicitar visita", icon: House },
     { id: "attendance", label: "Presença", icon: CheckCircle2 },
     { id: "media", label: "Mural da Congregação", icon: Camera },
     { id: "chat", label: "Assistente IA", icon: MessageCircle },
@@ -422,9 +397,7 @@ function LoginForm({ selectedRole, method, loginWithCredentials }) {
 
           <button
             className="primaryBtn"
-            onClick={() =>
-              alert("Login por telefone usará código SMS na versão oficial.")
-            }
+            onClick={() => alert("Login por telefone usará código SMS na versão oficial.")}
           >
             Receber código por SMS
           </button>
@@ -593,10 +566,11 @@ function HomePage({
   online,
   prayers,
   attendance,
+  visits,
   setTab
 }) {
   if (role === "leader") {
-    return <LeaderPage members={members} attendance={attendance} />;
+    return <LeaderPage members={members} attendance={attendance} visits={visits} />;
   }
 
   if (role === "pastor") {
@@ -607,6 +581,7 @@ function HomePage({
         events={events}
         prayers={prayers}
         attendance={attendance}
+        visits={visits}
       />
     );
   }
@@ -614,7 +589,6 @@ function HomePage({
   const profile = getProfile();
   const nextEvent = events[0];
   const pendingPrayers = prayers.filter((p) => p.status !== "Atendido").length;
-  const lastNotice = notices[0];
 
   return (
     <div className="page">
@@ -631,11 +605,11 @@ function HomePage({
         </div>
 
         <p style={{ fontStyle: "italic", lineHeight: "1.6", color: "#374151" }}>
-          “Porque eu bem sei os planos que tenho para vós, diz o Senhor; planos de paz e não de mal.”
+          “Entrega o teu caminho ao Senhor; confia nele, e o mais ele fará.”
         </p>
 
         <strong style={{ display: "block", marginTop: 10, color: "#102b57" }}>
-          Jeremias 29:11
+          Salmos 37:5
         </strong>
       </section>
 
@@ -660,26 +634,59 @@ function HomePage({
         </div>
 
         <div className="quickGrid">
-          <button onClick={() => setTab("agenda")}>
-            <CalendarDays size={20} />
+          <button className="quickCard" onClick={() => setTab("agenda")}>
+            <CalendarDays size={28} />
             <span>Agenda</span>
           </button>
 
-          <button onClick={() => setTab("notices")}>
-            <Bell size={20} />
+          <button className="quickCard" onClick={() => setTab("notices")}>
+            <Bell size={28} />
             <span>Avisos</span>
           </button>
 
-          <button onClick={() => setTab("prayer")}>
-            <HeartHandshake size={20} />
+          <button className="quickCard" onClick={() => setTab("prayer")}>
+            <HeartHandshake size={28} />
             <span>Oração</span>
           </button>
 
-          <button onClick={() => setTab("contribution")}>
-            <CircleDollarSign size={20} />
+          <button className="quickCard" onClick={() => setTab("visit")}>
+            <House size={28} />
+            <span>Visita</span>
+          </button>
+
+          <button className="quickCard" onClick={() => setTab("contribution")}>
+            <CircleDollarSign size={28} />
             <span>Pix</span>
           </button>
+
+          <button className="quickCard" onClick={() => setTab("media")}>
+            <Camera size={28} />
+            <span>Mural</span>
+          </button>
         </div>
+      </section>
+
+      <section className="section">
+        <div className="sectionTitle">
+          <h3>Peniel Hoje</h3>
+          <Church size={20} />
+        </div>
+
+        <div className="noticeCard">
+          <strong>{nextEvent?.title || "Culto de Ensino"}</strong>
+          <p>
+            {nextEvent
+              ? `${nextEvent.event_day} às ${nextEvent.event_time}`
+              : "Quarta-feira às 19:00"}
+          </p>
+        </div>
+
+        {notices[0] && (
+          <div className="noticeCard">
+            <strong>{notices[0].title}</strong>
+            <p>{notices[0].message}</p>
+          </div>
+        )}
       </section>
 
       <section className="section">
@@ -706,7 +713,7 @@ function HomePage({
           </div>
         ))}
 
-        {lastNotice && (
+        {notices.length > 0 && (
           <button className="secondaryBtn" onClick={() => setTab("notices")}>
             Ver todos os avisos
           </button>
@@ -715,56 +722,40 @@ function HomePage({
 
       <section className="section">
         <div className="sectionTitle">
-          <h3>Centro de oração</h3>
+          <h3>Mural da Congregação</h3>
+          <Camera size={20} />
+        </div>
+
+        {mediaRecords.slice(0, 2).map((item) => (
+          <div className="noticeCard" key={item.title}>
+            <strong>📸 {item.title}</strong>
+            <p>{item.description}</p>
+            <small>{item.photos} fotos · {item.videos} vídeos · {item.category}</small>
+          </div>
+        ))}
+
+        <button className="secondaryBtn" onClick={() => setTab("media")}>
+          Abrir mural
+        </button>
+      </section>
+
+      <section className="section">
+        <div className="sectionTitle">
+          <h3>Centro de Apoio Espiritual</h3>
           <HeartHandshake size={20} />
         </div>
 
         <div className="noticeCard">
           <strong>{pendingPrayers} solicitações em acompanhamento</strong>
-          <p>
-            Envie um pedido de oração ou solicite cuidado pastoral de forma privada.
-          </p>
+          <p>Envie um pedido de oração ou fale com a liderança de forma privada.</p>
         </div>
 
         <button className="secondaryBtn" onClick={() => setTab("prayer")}>
-          Abrir Centro de Oração
+          Pedido de oração
         </button>
-      </section>
 
-      <section className="section">
-        <div className="sectionTitle">
-          <h3>Últimos registros</h3>
-          <Camera size={20} />
-        </div>
-
-        {mediaRecords.slice(0, 3).map((item) => (
-          <div className="noticeCard" key={item.title}>
-            <strong>📸 {item.title}</strong>
-            <p>{item.description}</p>
-            <small>
-              {item.photos} fotos · {item.videos} vídeos · {item.category}
-            </small>
-          </div>
-        ))}
-
-        <button className="secondaryBtn" onClick={() => setTab("media")}>
-          Abrir Mural da Congregação
-        </button>
-      </section>
-
-      <section className="section">
-        <div className="sectionTitle">
-          <h3>Dízimos e ofertas</h3>
-          <CircleDollarSign size={20} />
-        </div>
-
-        <div className="noticeCard">
-          <strong>Contribua com a obra</strong>
-          <p>Utilize a área de contribuição para acessar o Pix da igreja.</p>
-        </div>
-
-        <button className="secondaryBtn" onClick={() => setTab("contribution")}>
-          Ver Pix da igreja
+        <button className="secondaryBtn" onClick={() => setTab("visit")}>
+          Solicitar visita pastoral
         </button>
       </section>
     </div>
@@ -978,12 +969,6 @@ function ContributionPage({ contribution, online }) {
           <Upload size={18} />
           Enviar comprovante
         </button>
-      </section>
-
-      <section className="section">
-        <div className="emptyState">
-          Confirme os dados da igreja antes de concluir a transferência no aplicativo do seu banco.
-        </div>
       </section>
     </div>
   );
@@ -1225,6 +1210,174 @@ function PrayerList({ prayers, updatePrayerStatus, showControls }) {
 
         {done.map((p) => (
           <PrayerCard p={p} key={p.id} />
+        ))}
+      </section>
+    </>
+  );
+}
+
+function VisitPage({ role, visits, addVisitRequest, updateVisitStatus, online }) {
+  if (role === "pastor" || role === "leader") {
+    return (
+      <div className="page">
+        <section className="welcome">
+          <p>Visitas</p>
+          <h2>Solicitações pastorais</h2>
+        </section>
+
+        <VisitList visits={visits} updateVisitStatus={updateVisitStatus} showControls />
+      </div>
+    );
+  }
+
+  return (
+    <div className="page">
+      <section className="welcome">
+        <p>Visita pastoral</p>
+        <h2>Solicitar acompanhamento</h2>
+      </section>
+
+      {!online && (
+        <section className="section">
+          <div className="emptyState">
+            Sem conexão. Não será possível enviar sua solicitação agora.
+          </div>
+        </section>
+      )}
+
+      <VisitForm addVisitRequest={addVisitRequest} />
+    </div>
+  );
+}
+
+function VisitForm({ addVisitRequest }) {
+  const profile = getProfile();
+
+  const [form, setForm] = useState({
+    visit_type: "Visita pastoral",
+    message: ""
+  });
+
+  function update(field, value) {
+    setForm({ ...form, [field]: value });
+  }
+
+  async function submit() {
+    if (!form.message.trim()) {
+      alert("Descreva brevemente o motivo da solicitação.");
+      return;
+    }
+
+    await addVisitRequest({
+      name: profile.name,
+      department: profile.dept,
+      phone: profile.phone,
+      visit_type: form.visit_type,
+      message: form.message
+    });
+
+    setForm({
+      visit_type: "Visita pastoral",
+      message: ""
+    });
+  }
+
+  return (
+    <section className="section">
+      <div className="sectionTitle">
+        <h3>Nova solicitação</h3>
+        <House size={20} />
+      </div>
+
+      <div className="noticeForm">
+        <label>Tipo de solicitação</label>
+        <select
+          value={form.visit_type}
+          onChange={(e) => update("visit_type", e.target.value)}
+        >
+          <option>Visita pastoral</option>
+          <option>Oração em casa</option>
+          <option>Acompanhamento espiritual</option>
+          <option>Conversar com liderança</option>
+        </select>
+
+        <label>Mensagem</label>
+        <textarea
+          value={form.message}
+          onChange={(e) => update("message", e.target.value)}
+          placeholder="Descreva brevemente o motivo da solicitação..."
+        />
+
+        <button className="primaryBtn" onClick={submit}>
+          Solicitar visita
+        </button>
+      </div>
+
+      <div className="emptyState" style={{ marginTop: 14 }}>
+        Essa solicitação será visualizada apenas pela liderança responsável.
+      </div>
+    </section>
+  );
+}
+
+function VisitList({ visits, updateVisitStatus, showControls }) {
+  const pending = visits.filter((v) => v.status !== "Atendido");
+  const done = visits.filter((v) => v.status === "Atendido");
+
+  function VisitCard({ visit, controls }) {
+    return (
+      <div className="noticeCard" key={visit.id}>
+        <strong>{visit.name || "Membro"}</strong>
+        <p>{visit.message}</p>
+
+        <small>
+          {visit.visit_type || "Visita pastoral"} · {visit.department || "Não informado"}
+        </small>
+
+        {visit.phone && <small>Contato: {visit.phone}</small>}
+
+        {controls && (
+          <button
+            className="secondaryBtn"
+            onClick={() => updateVisitStatus(visit.id, "Atendido")}
+          >
+            <CheckCircle2 size={17} />
+            Marcar como atendido
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <section className="section">
+        <div className="sectionTitle">
+          <h3>Solicitações recebidas</h3>
+          <House size={20} />
+        </div>
+
+        {pending.length === 0 && (
+          <div className="emptyState">Nenhuma solicitação pendente.</div>
+        )}
+
+        {pending.map((visit) => (
+          <VisitCard visit={visit} key={visit.id} controls={showControls} />
+        ))}
+      </section>
+
+      <section className="section">
+        <div className="sectionTitle">
+          <h3>Atendidas</h3>
+          <CheckCircle2 size={20} />
+        </div>
+
+        {done.length === 0 && (
+          <div className="emptyState">Nenhuma visita atendida ainda.</div>
+        )}
+
+        {done.map((visit) => (
+          <VisitCard visit={visit} key={visit.id} />
         ))}
       </section>
     </>
@@ -1628,11 +1781,13 @@ function ChatPage({ online }) {
   );
 }
 
-function LeaderPage({ members, attendance }) {
+function LeaderPage({ members, attendance, visits }) {
   const visibleMembers = members.filter((m) => {
     const dept = m.departamento || m.dept;
     return dept === "Jovens" || dept === "Adolescentes";
   });
+
+  const pendingVisits = visits.filter((v) => v.status !== "Atendido");
 
   return (
     <div className="page">
@@ -1645,12 +1800,13 @@ function LeaderPage({ members, attendance }) {
 
       <section className="section">
         <div className="sectionTitle">
-          <h3>Presença</h3>
-          <CheckCircle2 size={20} />
+          <h3>Cuidado</h3>
+          <HeartHandshake size={20} />
         </div>
 
-        <div className="emptyState">
-          Use a aba Presença no menu lateral para registrar presença dos membros nos cultos e eventos.
+        <div className="noticeCard">
+          <strong>{pendingVisits.length} visitas pendentes</strong>
+          <p>Solicitações de cuidado e acompanhamento aguardando atenção.</p>
         </div>
       </section>
 
@@ -1659,10 +1815,11 @@ function LeaderPage({ members, attendance }) {
   );
 }
 
-function PastorPage({ members, notices, events, prayers, attendance }) {
+function PastorPage({ members, notices, events, prayers, attendance, visits }) {
   const [panelTab, setPanelTab] = useState("overview");
 
   const pendingPrayers = prayers.filter((p) => p.status !== "Atendido");
+  const pendingVisits = visits.filter((v) => v.status !== "Atendido");
   const presentCount = attendance.filter((a) => a.status === "Presente").length;
   const absentCount = attendance.filter((a) => a.status === "Ausente").length;
 
@@ -1674,52 +1831,28 @@ function PastorPage({ members, notices, events, prayers, attendance }) {
       </section>
 
       <div className="pastorTabs">
-        <button
-          className={panelTab === "overview" ? "active" : ""}
-          onClick={() => setPanelTab("overview")}
-        >
+        <button className={panelTab === "overview" ? "active" : ""} onClick={() => setPanelTab("overview")}>
           Geral
         </button>
-
-        <button
-          className={panelTab === "notices" ? "active" : ""}
-          onClick={() => setPanelTab("notices")}
-        >
+        <button className={panelTab === "notices" ? "active" : ""} onClick={() => setPanelTab("notices")}>
           Avisos
         </button>
-
-        <button
-          className={panelTab === "agenda" ? "active" : ""}
-          onClick={() => setPanelTab("agenda")}
-        >
+        <button className={panelTab === "agenda" ? "active" : ""} onClick={() => setPanelTab("agenda")}>
           Agenda
         </button>
-
-        <button
-          className={panelTab === "members" ? "active" : ""}
-          onClick={() => setPanelTab("members")}
-        >
+        <button className={panelTab === "members" ? "active" : ""} onClick={() => setPanelTab("members")}>
           Membros
         </button>
-
-        <button
-          className={panelTab === "prayers" ? "active" : ""}
-          onClick={() => setPanelTab("prayers")}
-        >
+        <button className={panelTab === "prayers" ? "active" : ""} onClick={() => setPanelTab("prayers")}>
           Cuidado
         </button>
-
-        <button
-          className={panelTab === "attendance" ? "active" : ""}
-          onClick={() => setPanelTab("attendance")}
-        >
+        <button className={panelTab === "visits" ? "active" : ""} onClick={() => setPanelTab("visits")}>
+          Visitas
+        </button>
+        <button className={panelTab === "attendance" ? "active" : ""} onClick={() => setPanelTab("attendance")}>
           Presença
         </button>
-
-        <button
-          className={panelTab === "alerts" ? "active" : ""}
-          onClick={() => setPanelTab("alerts")}
-        >
+        <button className={panelTab === "alerts" ? "active" : ""} onClick={() => setPanelTab("alerts")}>
           Alertas
         </button>
       </div>
@@ -1734,23 +1867,28 @@ function PastorPage({ members, notices, events, prayers, attendance }) {
 
             <div>
               <strong>{pendingPrayers.length}</strong>
-              <span>Cuidados</span>
+              <span>Orações</span>
             </div>
 
             <div>
-              <strong>{presentCount}</strong>
-              <span>Presenças</span>
+              <strong>{pendingVisits.length}</strong>
+              <span>Visitas</span>
             </div>
           </div>
 
           <section className="section">
             <div className="sectionTitle">
-              <h3>Resumo</h3>
+              <h3>Resumo pastoral</h3>
               <ShieldAlert size={20} />
             </div>
 
+            <div className="noticeCard">
+              <strong>{presentCount} presenças registradas</strong>
+              <p>{absentCount} ausências registradas nos eventos acompanhados.</p>
+            </div>
+
             <div className="emptyState">
-              Use as abas acima para gerenciar avisos, agenda, membros, cuidado pastoral, presença e alertas.
+              Use as abas acima para gerenciar avisos, agenda, membros, cuidado pastoral, visitas, presença e alertas.
             </div>
           </section>
         </>
@@ -1769,6 +1907,10 @@ function PastorPage({ members, notices, events, prayers, attendance }) {
 
       {panelTab === "prayers" && (
         <PrayerList prayers={prayers} updatePrayerStatus={() => {}} showControls={false} />
+      )}
+
+      {panelTab === "visits" && (
+        <VisitList visits={visits} updateVisitStatus={() => {}} showControls={false} />
       )}
 
       {panelTab === "attendance" && (
@@ -2103,6 +2245,7 @@ export default function App() {
   const [events, setEvents] = useState([]);
   const [prayers, setPrayers] = useState([]);
   const [attendance, setAttendance] = useState([]);
+  const [visits, setVisits] = useState([]);
   const [contribution, setContribution] = useState(null);
 
   const [splash, setSplash] = useState(true);
@@ -2125,6 +2268,7 @@ export default function App() {
     loadEvents();
     loadPrayers();
     loadAttendance();
+    loadVisits();
 
     const noticeChannel = supabase
       .channel("notices-feed")
@@ -2160,6 +2304,15 @@ export default function App() {
       )
       .subscribe();
 
+    const visitsChannel = supabase
+      .channel("visits-feed")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "visit_requests" },
+        () => loadVisits()
+      )
+      .subscribe();
+
     function goOnline() {
       setOnline(true);
       loadMembers();
@@ -2168,6 +2321,7 @@ export default function App() {
       loadEvents();
       loadPrayers();
       loadAttendance();
+      loadVisits();
     }
 
     function goOffline() {
@@ -2183,6 +2337,7 @@ export default function App() {
       supabase.removeChannel(prayerChannel);
       supabase.removeChannel(eventChannel);
       supabase.removeChannel(attendanceChannel);
+      supabase.removeChannel(visitsChannel);
       window.removeEventListener("online", goOnline);
       window.removeEventListener("offline", goOffline);
     };
@@ -2285,6 +2440,17 @@ export default function App() {
       .order("created_at", { ascending: false });
 
     if (!error && data) setAttendance(data);
+  }
+
+  async function loadVisits() {
+    if (!navigator.onLine) return;
+
+    const { data, error } = await supabase
+      .from("visit_requests")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && data) setVisits(data);
   }
 
   async function loadContribution() {
@@ -2403,6 +2569,50 @@ export default function App() {
     await loadPrayers();
   }
 
+  async function addVisitRequest(visit) {
+    if (!navigator.onLine) {
+      alert("Não foi possível enviar a solicitação. Verifique sua conexão.");
+      return;
+    }
+
+    const { error } = await supabase.from("visit_requests").insert({
+      name: visit.name,
+      department: visit.department,
+      phone: visit.phone,
+      visit_type: visit.visit_type,
+      message: visit.message,
+      status: "Recebido",
+      private_to_leadership: true
+    });
+
+    if (error) {
+      alert("Não foi possível enviar a solicitação.");
+      return;
+    }
+
+    await loadVisits();
+    alert("Solicitação enviada para a liderança. 💙");
+  }
+
+  async function updateVisitStatus(id, status) {
+    if (!navigator.onLine) {
+      alert("Sem conexão.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("visit_requests")
+      .update({ status })
+      .eq("id", id);
+
+    if (error) {
+      alert("Não foi possível atualizar a solicitação.");
+      return;
+    }
+
+    await loadVisits();
+  }
+
   async function markAttendance(event, member, status) {
     if (!event) {
       alert("Cadastre ou selecione um evento primeiro.");
@@ -2491,6 +2701,16 @@ export default function App() {
         online={online}
       />
     );
+  } else if (tab === "visit") {
+    content = (
+      <VisitPage
+        role={role}
+        visits={visits}
+        addVisitRequest={addVisitRequest}
+        updateVisitStatus={updateVisitStatus}
+        online={online}
+      />
+    );
   } else if (tab === "attendance") {
     content = (
       <AttendancePage
@@ -2517,6 +2737,7 @@ export default function App() {
         events={events}
         prayers={prayers}
         attendance={attendance}
+        visits={visits}
         online={online}
         setTab={setTab}
       />
