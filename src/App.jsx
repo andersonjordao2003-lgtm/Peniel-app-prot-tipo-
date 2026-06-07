@@ -1,5 +1,3 @@
-Substitua todo o App.jsx por este:
-
 import React, { useEffect, useState } from "react";
 import {
   Bell, CalendarDays, Home, LogOut, MessageCircle, Send,
