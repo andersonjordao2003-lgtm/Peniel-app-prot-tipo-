@@ -1118,3 +1118,25 @@ button {
     overflow: hidden;
   }
 }
+.logoIcon {
+  width: 64px !important;
+  height: 64px !important;
+  min-width: 64px !important;
+}
+
+.logoImage {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+.splashLogo {
+  width: 130px !important;
+  height: 130px !important;
+}
+
+.splashLogoImage {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
