@@ -22,6 +22,16 @@ const departments = [
   { name: "Mídia", icon: Camera }
 ];
 
+const dailyVerses = [
+  { text: "Entrega o teu caminho ao Senhor; confia nele, e o mais ele fará.", ref: "Salmos 37:5" },
+  { text: "O Senhor é o meu pastor; nada me faltará.", ref: "Salmos 23:1" },
+  { text: "Tudo posso naquele que me fortalece.", ref: "Filipenses 4:13" },
+  { text: "Lâmpada para os meus pés é tua palavra, e luz para o meu caminho.", ref: "Salmos 119:105" },
+  { text: "Buscai primeiro o Reino de Deus, e a sua justiça.", ref: "Mateus 6:33" },
+  { text: "O choro pode durar uma noite, mas a alegria vem pela manhã.", ref: "Salmos 30:5" },
+  { text: "Aquietai-vos e sabei que eu sou Deus.", ref: "Salmos 46:10" }
+];
+
 const prayerCategories = [
   "Saúde",
   "Família",
@@ -110,7 +120,68 @@ function getRoleName(role) {
   return "Membro";
 }
 
-function Header({ role, logout, openMenu }) {
+function normalizeDay(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function getDayNumber(day) {
+  const text = normalizeDay(day);
+
+  if (text.includes("domingo")) return 0;
+  if (text.includes("segunda")) return 1;
+  if (text.includes("terca")) return 2;
+  if (text.includes("quarta")) return 3;
+  if (text.includes("quinta")) return 4;
+  if (text.includes("sexta")) return 5;
+  if (text.includes("sabado")) return 6;
+
+  return null;
+}
+
+function getTodayEvents(events) {
+  const todayNumber = new Date().getDay();
+
+  return events.filter((event) => {
+    return getDayNumber(event.event_day) === todayNumber;
+  });
+}
+
+function getNextEvent(events) {
+  if (!events || events.length === 0) return null;
+
+  const todayNumber = new Date().getDay();
+
+  const sorted = [...events]
+    .map((event) => {
+      const dayNumber = getDayNumber(event.event_day);
+
+      if (dayNumber === null) {
+        return { ...event, distance: 99 };
+      }
+
+      return {
+        ...event,
+        distance: (dayNumber - todayNumber + 7) % 7
+      };
+    })
+    .sort((a, b) => a.distance - b.distance);
+
+  return sorted[0] || null;
+}
+
+function getDailyVerse() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = now - start;
+  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  return dailyVerses[dayOfYear % dailyVerses.length];
+}
+
+function Header({ role, openMenu }) {
   return (
     <header className="header">
       <div className="logoArea">
@@ -129,12 +200,6 @@ function Header({ role, logout, openMenu }) {
           <p>Onde se vê a face de Deus</p>
         </div>
       </div>
-
-      {role && (
-        <button className="logout" onClick={logout}>
-          <LogOut size={18} />
-        </button>
-      )}
     </header>
   );
 }
@@ -587,14 +652,14 @@ function HomePage({
   }
 
   const profile = getProfile();
-  const nextEvent = events[0];
-  const pendingPrayers = prayers.filter((p) => p.status !== "Atendido").length;
-  const pendingVisits = visits.filter((v) => v.status !== "Atendido").length;
+  const verse = getDailyVerse();
+  const nextEvent = getNextEvent(events);
+  const todayEvents = getTodayEvents(events);
 
   return (
     <div className="page">
       <section className="welcome">
-        <p>Bom dia 👋</p>
+        <p>Bem-vindo 👋</p>
         <h2>{profile.name}</h2>
         <p>Que Deus abençoe seu dia.</p>
       </section>
@@ -606,22 +671,22 @@ function HomePage({
         </div>
 
         <p style={{ fontStyle: "italic", lineHeight: "1.6", color: "#374151" }}>
-          “Entrega o teu caminho ao Senhor; confia nele, e o mais ele fará.”
+          “{verse.text}”
         </p>
 
         <strong style={{ display: "block", marginTop: 10, color: "#102b57" }}>
-          Salmos 37:5
+          {verse.ref}
         </strong>
       </section>
 
       <section className="nextEvent">
         <div>
           <p>Próximo compromisso</p>
-          <h3>{nextEvent?.title || "Culto de Ensino"}</h3>
+          <h3>{nextEvent?.title || "Nenhum evento cadastrado"}</h3>
           <span>
             {nextEvent
               ? `${nextEvent.event_day} • ${nextEvent.event_time}`
-              : "Quarta-feira • 19:00"}
+              : "Aguarde a atualização da agenda"}
           </span>
         </div>
 
@@ -634,42 +699,40 @@ function HomePage({
           <Church size={20} />
         </div>
 
-        <div className="noticeCard">
-          <strong>{nextEvent?.title || "Culto de Ensino"}</strong>
-          <p>
-            {nextEvent
-              ? `${nextEvent.event_day} às ${nextEvent.event_time}`
-              : "Quarta-feira às 19:00"}
-          </p>
-        </div>
+        {todayEvents.length === 0 && (
+          <div className="emptyState">
+            Hoje não há compromisso cadastrado. Fique atento aos avisos da igreja.
+          </div>
+        )}
+
+        {todayEvents.map((event) => (
+          <div className="noticeCard" key={event.id}>
+            <strong>{event.title}</strong>
+            <p>{event.event_day} às {event.event_time}</p>
+            {event.description && <small>{event.description}</small>}
+          </div>
+        ))}
 
         {notices[0] && (
           <div className="noticeCard">
             <strong>{notices[0].title}</strong>
             <p>{notices[0].message}</p>
+            <small>{notices[0].target || "Todos"} · {notices[0].author || "Peniel"}</small>
           </div>
         )}
       </section>
 
-      <section className="section churchStatus">
+      <section className="section">
         <div className="sectionTitle">
-          <h3>Resumo da igreja</h3>
-          <Users size={20} />
+          <h3>Palavra pastoral</h3>
+          <HeartHandshake size={20} />
         </div>
 
         <div className="noticeCard">
-          <strong>{pendingPrayers} pedidos em oração</strong>
-          <p>Solicitações espirituais recebidas pela liderança.</p>
-        </div>
-
-        <div className="noticeCard">
-          <strong>{pendingVisits} visitas pendentes</strong>
-          <p>Pedidos de visita e acompanhamento pastoral.</p>
-        </div>
-
-        <div className="noticeCard">
-          <strong>{members.length} membros cadastrados</strong>
-          <p>Base atual de membros registrados no aplicativo.</p>
+          <strong>Permaneça firme na fé</strong>
+          <p>
+            Que sua semana seja marcada pela presença de Deus, pela oração e pela comunhão com a igreja.
+          </p>
         </div>
       </section>
 
@@ -711,8 +774,10 @@ function HomePage({
         </div>
 
         <div className="noticeCard">
-          <strong>Cuidado e oração</strong>
-          <p>Envie um pedido de oração ou fale com a liderança de forma privada.</p>
+          <strong>Cuidado, oração e acompanhamento</strong>
+          <p>
+            Envie um pedido de oração, converse com a liderança ou solicite uma visita pastoral.
+          </p>
         </div>
 
         <button className="secondaryBtn" onClick={() => setTab("prayer")}>
@@ -2747,7 +2812,7 @@ export default function App() {
   return (
     <div className="app">
       <div className="phone">
-        <Header role={role} logout={logout} openMenu={() => setMenuOpen(true)} />
+        <Header role={role} openMenu={() => setMenuOpen(true)} />
 
         <SideMenu
           open={menuOpen}
